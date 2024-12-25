@@ -57,8 +57,7 @@ abstract interface class IAsyncDisposable {
 }
 
 /// 服务集合接口，用于配置和添加服务
-abstract interface class IServiceCollection
-    implements List<ServiceDescriptor> {}
+abstract interface class IServiceCollection implements List<ServiceDescriptor> {}
 
 /// 服务提供器接口
 ///
@@ -86,8 +85,7 @@ abstract interface class IServiceProviderIsService {
 }
 
 /// 服务作用域
-abstract interface class IServiceScope
-    implements IDisposable, IAsyncDisposable {
+abstract interface class IServiceScope implements IDisposable, IAsyncDisposable {
   /// 获取与该作用域关联的服务提供器
   IServiceProvider get serviceProvider;
 }
@@ -154,8 +152,7 @@ class ServiceDescriptor<TService, TImplementation extends TService> {
   /// 使用现有实例创建一个单例的服务描述器
   ///
   /// 使用[factory]服务工厂添加的服务始终由服务容器释放。
-  const ServiceDescriptor.singleton(
-      {required ServiceFactory<TImplementation> factory})
+  const ServiceDescriptor.singleton({required ServiceFactory<TImplementation> factory})
       : this._(lifeTime: ServiceLifeTime.singleton, factory: factory);
 
   /// 创建一个作用域服务描述器
@@ -163,15 +160,13 @@ class ServiceDescriptor<TService, TImplementation extends TService> {
   /// 作用域服务由服务容器释放。在不同的作用域中将创建不同的实例，在根服务容器中，不允许请求作用域服务，将抛出错误。
   ///
   /// 使用[factory]服务工厂添加的服务始终由服务容器释放。
-  const ServiceDescriptor.scoped(
-      {required ServiceFactory<TImplementation> factory})
+  const ServiceDescriptor.scoped({required ServiceFactory<TImplementation> factory})
       : this._(lifeTime: ServiceLifeTime.scoped, factory: factory);
 
   /// 创建一个瞬时服务描述器
   ///
   /// 每次请求瞬时服务时，都将创建一个新的实例。瞬时服务不由服务容器释放，从服务容器获取后，由其使用者进行释放。
-  const ServiceDescriptor.transient(
-      {required ServiceFactory<TImplementation> factory})
+  const ServiceDescriptor.transient({required ServiceFactory<TImplementation> factory})
       : this._(lifeTime: ServiceLifeTime.transient, factory: factory);
 
   @override
@@ -207,8 +202,7 @@ class ServiceDescriptor<TService, TImplementation extends TService> {
 }
 
 /// 服务作用域默认实现
-class _ServiceProviderScope
-    implements IServiceScope, IServiceProvider, IServiceScopeFactory {
+class _ServiceProviderScope implements IServiceScope, IServiceProvider, IServiceScopeFactory {
   bool _disposed = false;
   final List<Object> _disposables = [];
 
@@ -226,9 +220,7 @@ class _ServiceProviderScope
   /// 根服务提供器
   final ServiceProvider _rootProvider;
 
-  _ServiceProviderScope._(
-      {required ServiceProvider rootProvider, required this.isRoot})
-      : _rootProvider = rootProvider;
+  _ServiceProviderScope._({required ServiceProvider rootProvider, required this.isRoot}) : _rootProvider = rootProvider;
 
   /// 释放由当前作用域缓存的服务
   @override
@@ -303,8 +295,7 @@ class _ServiceProviderScope
   /// 返回records类型, [isBuildIn] 指示是否为内置服务，如果为`true`，那么[serviceInstance]有值，否则[isBuildIn]为`false`，[serviceInstance]为`null`
   ///
   /// 注意，如果添加了新的内置服务，那么需要更新这个方法
-  (bool isBuildIn, Object? serviceInstance) _fetchBuildInService(
-      Type serviceType) {
+  (bool isBuildIn, Object? serviceInstance) _fetchBuildInService(Type serviceType) {
     _throwIfDisposed();
     if (serviceType == IServiceProvider) {
       return (true, this);
@@ -337,8 +328,7 @@ class _ServiceProviderScope
             _servicesCache[descriptor] = instance;
             return instance;
           }
-          return _rootProvider._getService(
-              descriptor, _rootProvider._rootScope);
+          return _rootProvider._getService(descriptor, _rootProvider._rootScope);
         }
       case ServiceLifeTime.scoped:
         {
@@ -377,36 +367,26 @@ class _ServiceIdentifier {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is _ServiceIdentifier &&
-          runtimeType == other.runtimeType &&
-          serviceType == other.serviceType;
+      other is _ServiceIdentifier && runtimeType == other.runtimeType && serviceType == other.serviceType;
 
   @override
   int get hashCode => serviceType.hashCode;
 
   /// 从服务描述器来创建一个服务标识
-  _ServiceIdentifier.fromDescriptor(ServiceDescriptor descriptor)
-      : this(serviceType: descriptor.serviceType);
+  _ServiceIdentifier.fromDescriptor(ServiceDescriptor descriptor) : this(serviceType: descriptor.serviceType);
 
   /// 从服务类型来创建一个服务标识
-  const _ServiceIdentifier.fromType(Type serviceType)
-      : this(serviceType: serviceType);
+  const _ServiceIdentifier.fromType(Type serviceType) : this(serviceType: serviceType);
 }
 
 /// 表示根服务提供器
-final class ServiceProvider
-    implements
-        IServiceProvider,
-        IServiceProviderIsService,
-        IDisposable,
-        IAsyncDisposable {
+final class ServiceProvider implements IServiceProvider, IServiceProviderIsService, IDisposable, IAsyncDisposable {
   bool _disposed = false;
   final List<ServiceDescriptor> _descriptors;
   late final _ServiceProviderScope _rootScope;
 
   /// 根服务提供器
-  ServiceProvider._root(Iterable<ServiceDescriptor> descriptors)
-      : _descriptors = descriptors.toList() {
+  ServiceProvider._root(Iterable<ServiceDescriptor> descriptors) : _descriptors = descriptors.toList() {
     _rootScope = _ServiceProviderScope._(rootProvider: this, isRoot: true);
   }
 
@@ -425,24 +405,20 @@ final class ServiceProvider
   Iterable<ServiceDescriptor> _findDescriptors(Type serviceType) {
     _throwIfDisposed();
     final identifier = _ServiceIdentifier.fromType(serviceType);
-    return _descriptors
-        .where((e) => identifier == _ServiceIdentifier.fromDescriptor(e));
+    return _descriptors.where((e) => identifier == _ServiceIdentifier.fromDescriptor(e));
   }
 
   @override
-  Object? getService(Type serviceType) =>
-      _getServiceByType(serviceType, _rootScope);
+  Object? getService(Type serviceType) => _getServiceByType(serviceType, _rootScope);
 
   @override
-  Iterable<Object> getServices(Type serviceType) =>
-      _getServicesByType(serviceType, _rootScope);
+  Iterable<Object> getServices(Type serviceType) => _getServicesByType(serviceType, _rootScope);
 
   Object? _getServiceByType(Type serviceType, _ServiceProviderScope scope) {
     _throwIfDisposed();
     var (isBuildIn, instance) = scope._fetchBuildInService(serviceType);
     if (isBuildIn) {
-      assert(instance != null,
-          "Build in service instance can not be null when fetch a build in service.");
+      assert(instance != null, "Build in service instance can not be null when fetch a build in service.");
       return instance;
     }
     final d = _findDescriptor(serviceType);
@@ -452,13 +428,11 @@ final class ServiceProvider
     return _getService(d, scope);
   }
 
-  Iterable<Object> _getServicesByType(
-      Type serviceType, _ServiceProviderScope scope) {
+  Iterable<Object> _getServicesByType(Type serviceType, _ServiceProviderScope scope) {
     _throwIfDisposed();
     var (isBuildIn, instance) = scope._fetchBuildInService(serviceType);
     if (isBuildIn) {
-      assert(instance != null,
-          "Build in service instance can not be null when fetch a build in service.");
+      assert(instance != null, "Build in service instance can not be null when fetch a build in service.");
       return [instance!];
     }
     final ds = _findDescriptors(serviceType);
@@ -468,14 +442,12 @@ final class ServiceProvider
     return _getServices(ds, scope);
   }
 
-  Object _getService(
-      ServiceDescriptor descriptor, _ServiceProviderScope scope) {
+  Object _getService(ServiceDescriptor descriptor, _ServiceProviderScope scope) {
     _throwIfDisposed();
     return scope._getOrAdd(descriptor);
   }
 
-  Iterable<Object> _getServices(Iterable<ServiceDescriptor> descriptors,
-      _ServiceProviderScope scope) sync* {
+  Iterable<Object> _getServices(Iterable<ServiceDescriptor> descriptors, _ServiceProviderScope scope) sync* {
     _throwIfDisposed();
     for (final d in descriptors) {
       yield scope._getOrAdd(d);
@@ -520,14 +492,12 @@ final class ServiceProvider
     return serviceType == IServiceProvider ||
         serviceType == IServiceProviderIsService ||
         serviceType == IServiceScopeFactory ||
-        _descriptors
-            .any((e) => identifier == _ServiceIdentifier.fromDescriptor(e));
+        _descriptors.any((e) => identifier == _ServiceIdentifier.fromDescriptor(e));
   }
 }
 
 /// 服务集合默认实现
-class ServiceCollection extends ListBase<ServiceDescriptor>
-    implements IServiceCollection {
+class ServiceCollection extends ListBase<ServiceDescriptor> implements IServiceCollection {
   final List<ServiceDescriptor> _l = [];
 
   /// 服务集合默认实现
@@ -573,14 +543,11 @@ extension ServiceCollectionExtensions on IServiceCollection {
   }
 
   /// 使用[instance]实例来添加一个单例服务
-  void addSingletonInstance<TService, TImplementation extends TService>(
-          TImplementation instance) =>
-      add(ServiceDescriptor<TService, TImplementation>.instance(
-          serviceInstance: instance));
+  void addSingletonInstance<TService, TImplementation extends TService>(TImplementation instance) =>
+      add(ServiceDescriptor<TService, TImplementation>.instance(serviceInstance: instance));
 
   /// 尝试使用[instance]实例来添加一个单例服务，如果[TService]已经注册，则不会添加
-  void tryAddSingletonInstance<TService, TImplementation extends TService>(
-      TImplementation instance) {
+  void tryAddSingletonInstance<TService, TImplementation extends TService>(TImplementation instance) {
     if (_serviceExists(TService)) {
       return;
     }
@@ -588,14 +555,11 @@ extension ServiceCollectionExtensions on IServiceCollection {
   }
 
   /// 使用[factory]服务工厂来添加一个单例服务
-  void addSingleton<TService, TImplementation extends TService>(
-          ServiceFactory<TImplementation> factory) =>
-      add(ServiceDescriptor<TService, TImplementation>.singleton(
-          factory: factory));
+  void addSingleton<TService, TImplementation extends TService>(ServiceFactory<TImplementation> factory) =>
+      add(ServiceDescriptor<TService, TImplementation>.singleton(factory: factory));
 
   /// 尝试使用[factory]服务工厂来添加一个单例服务，如果[TService]已经注册，则不会添加
-  void tryAddSingleton<TService, TImplementation extends TService>(
-      ServiceFactory<TImplementation> factory) {
+  void tryAddSingleton<TService, TImplementation extends TService>(ServiceFactory<TImplementation> factory) {
     if (_serviceExists(TService)) {
       return;
     }
@@ -603,14 +567,11 @@ extension ServiceCollectionExtensions on IServiceCollection {
   }
 
   /// 使用[factory]服务工厂来添加一个作用域服务
-  void addScoped<TService, TImplementation extends TService>(
-          ServiceFactory<TImplementation> factory) =>
-      add(ServiceDescriptor<TService, TImplementation>.scoped(
-          factory: factory));
+  void addScoped<TService, TImplementation extends TService>(ServiceFactory<TImplementation> factory) =>
+      add(ServiceDescriptor<TService, TImplementation>.scoped(factory: factory));
 
   /// 尝试使用[factory]服务工厂来添加一个作用域服务，如果[TService]已经注册，则不会添加
-  void tryAddScoped<TService, TImplementation extends TService>(
-      ServiceFactory<TImplementation> factory) {
+  void tryAddScoped<TService, TImplementation extends TService>(ServiceFactory<TImplementation> factory) {
     if (_serviceExists(TService)) {
       return;
     }
@@ -618,14 +579,11 @@ extension ServiceCollectionExtensions on IServiceCollection {
   }
 
   /// 使用[factory]服务工厂来添加一个瞬时服务
-  void addTransient<TService, TImplementation extends TService>(
-          ServiceFactory<TImplementation> factory) =>
-      add(ServiceDescriptor<TService, TImplementation>.transient(
-          factory: factory));
+  void addTransient<TService, TImplementation extends TService>(ServiceFactory<TImplementation> factory) =>
+      add(ServiceDescriptor<TService, TImplementation>.transient(factory: factory));
 
   /// 尝试使用[factory]服务工厂来添加一个瞬时服务，如果[TService]已经注册，则不会添加
-  void tryAddTransient<TService, TImplementation extends TService>(
-      ServiceFactory<TImplementation> factory) {
+  void tryAddTransient<TService, TImplementation extends TService>(ServiceFactory<TImplementation> factory) {
     if (_serviceExists(TService)) {
       return;
     }
@@ -633,8 +591,7 @@ extension ServiceCollectionExtensions on IServiceCollection {
   }
 
   /// 检测[serviceType]=服务类型是否已经注册。
-  bool _serviceExists(Type serviceType) =>
-      any((e) => e.serviceType == serviceType);
+  bool _serviceExists(Type serviceType) => any((e) => e.serviceType == serviceType);
 }
 
 /// 定义用于添加可枚举服务的扩展方法
@@ -653,9 +610,7 @@ extension EnumerableServiceCollectionExtensions on IServiceCollection {
 
   /// 检测[descriptor]表示的服务类型和服务实现的描述器是否已经添加
   bool _serviceImplementationExists(ServiceDescriptor descriptor) {
-    return any((e) =>
-        e.serviceType == descriptor.serviceType &&
-        e.implementationType == descriptor.implementationType);
+    return any((e) => e.serviceType == descriptor.serviceType && e.implementationType == descriptor.implementationType);
   }
 }
 
@@ -671,8 +626,7 @@ extension EditableServiceCollectionExtensions on IServiceCollection {
       }
       final index = indexOf(d);
       final d1 = decorator(d);
-      assert(d1.serviceType == serviceType,
-          "Decorator can not change the origin service type.");
+      assert(d1.serviceType == serviceType, "Decorator can not change the origin service type.");
       this[index] = d1;
     }
   }
@@ -699,8 +653,7 @@ extension ServiceProviderExtensions on IServiceProvider {
   TService getRequiredService<TService>() {
     var instance = getTypedService<TService>();
     if (instance == null) {
-      throw ServiceNotFoundError(
-          "Service `$TService` can not be found.", TService);
+      throw ServiceNotFoundError("Service `$TService` can not be found.", TService);
     }
     return instance as TService;
   }
@@ -715,8 +668,7 @@ extension ServiceProviderExtensions on IServiceProvider {
   Iterable<TService> getRequiredServices<TService>() {
     final list = getTypedServices<TService>();
     if (list.isEmpty) {
-      throw ServiceNotFoundError(
-          "Service `$TService` can not be found.", TService);
+      throw ServiceNotFoundError("Service `$TService` can not be found.", TService);
     }
     return list;
   }

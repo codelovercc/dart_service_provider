@@ -2,11 +2,9 @@ import 'package:dart_service_provider/dart_service_provider.dart';
 
 void main() {
   final services = ServiceCollection()
-    ..addSingleton<IMySingletonService, MySingletonService>(
-        (_) => MySingletonService())
+    ..addSingleton<IMySingletonService, MySingletonService>((_) => MySingletonService())
     ..addScoped<IMyScopedService, MyScopedService>((_) => MyScopedService())
-    ..addTransient<IMyTransientService, MyTransientService>(
-        (_) => MyTransientService())
+    ..addTransient<IMyTransientService, MyTransientService>((_) => MyTransientService())
     ..addScoped<MyScopedDependencyService, MyScopedDependencyService>(
       (p) => MyScopedDependencyService(
         singletonService: p.getRequiredService<IMySingletonService>(),
@@ -16,22 +14,16 @@ void main() {
     );
 
   final serviceProvider = services.buildServiceProvider();
-  final singletonService =
-      serviceProvider.getRequiredService<IMySingletonService>();
-  final transientService =
-      serviceProvider.getRequiredService<IMyTransientService>();
+  final singletonService = serviceProvider.getRequiredService<IMySingletonService>();
+  final transientService = serviceProvider.getRequiredService<IMyTransientService>();
   // Scoping
   final scope = serviceProvider.createScope();
-  final singletonService2 =
-      scope.serviceProvider.getRequiredService<IMySingletonService>();
+  final singletonService2 = scope.serviceProvider.getRequiredService<IMySingletonService>();
   assert(identical(singletonService, singletonService2));
-  final scopedService =
-      scope.serviceProvider.getRequiredService<IMyScopedService>();
-  final scopedService2 =
-      scope.serviceProvider.getRequiredService<IMyScopedService>();
+  final scopedService = scope.serviceProvider.getRequiredService<IMyScopedService>();
+  final scopedService2 = scope.serviceProvider.getRequiredService<IMyScopedService>();
   assert(identical(scopedService, scopedService2));
-  final transientService2 =
-      scope.serviceProvider.getRequiredService<IMyTransientService>();
+  final transientService2 = scope.serviceProvider.getRequiredService<IMyTransientService>();
   assert(!identical(transientService, transientService2));
   // Always dispose the scope when you don't need it anymore.
   // This will cleanup any resources use by this scope and the services in this scope.
@@ -91,9 +83,7 @@ class MyScopedDependencyService {
   final IMyTransientService transientService;
 
   MyScopedDependencyService(
-      {required this.singletonService,
-      required this.scopedService,
-      required this.transientService}) {
+      {required this.singletonService, required this.scopedService, required this.transientService}) {
     print("MyDependencyService $hashCode constructing with "
         "IMySingletonService ${singletonService.hashCode}, "
         "IMyScopedService ${scopedService.hashCode}, "
