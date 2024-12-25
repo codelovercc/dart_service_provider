@@ -132,7 +132,7 @@ class MyService{}
 
 ## Additional information
 
-If you have any issues or suggests please redirect to []() or [send an email](mailto:codelovercc@gmail.com) to me.
+If you have any issues or suggests please redirect to [repo](https://github.com/codelovercc/dart_service_provider) or [send an email](mailto:codelovercc@gmail.com) to me.
 
 ## todo
 
