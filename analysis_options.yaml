@@ -18,6 +18,9 @@ include: package:lints/recommended.yaml
 # linter:
 #   rules:
 #     - camel_case_types
+linter:
+  rules:
+    - lines_longer_than_80_chars
 
 # analyzer:
 #   exclude:
