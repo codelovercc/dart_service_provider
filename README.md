@@ -13,6 +13,13 @@ and the Flutter guide for
 
 # dart_service_provider
 
+[![pub package](https://img.shields.io/pub/v/dart_service_provider?logo=dart&logoColor=00b9fc)](https://pub.dartlang.org/packages/dart_service_provider)
+[![CI](https://img.shields.io/github/actions/workflow/status/codelovercc/dart_service_provider/dart.yml?branch=main&logo=github-actions&logoColor=white)](https://github.com/codelovercc/dart_service_provider/actions)
+[![Last Commits](https://img.shields.io/github/last-commit/codelovercc/dart_service_provider?logo=git&logoColor=white)](https://github.com/codelovercc/dart_service_provider/commits/main)
+[![Pull Requests](https://img.shields.io/github/issues-pr/codelovercc/dart_service_provider?logo=github&logoColor=white)](https://github.com/codelovercc/dart_service_provider/pulls)
+[![Code size](https://img.shields.io/github/languages/code-size/codelovercc/dart_service_provider?logo=github&logoColor=white)](https://github.com/codelovercc/dart_service_provider)
+[![License](https://img.shields.io/github/license/codelovercc/dart_service_provider?logo=open-source-initiative&logoColor=green)](https://github.com/codelovercc/dart_service_provider/blob/main/LICENSE)
+
 An services dependency provider, like dependency inject, easy to learn and easy to use.
 
 ## Features
