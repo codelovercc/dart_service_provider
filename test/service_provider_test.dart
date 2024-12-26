@@ -253,7 +253,7 @@ void main() {
       expect(() => p.getService(NotAService), throwsA(isA<ObjectDisposedError>()));
       expect(() => p.getServices(NotAService), throwsA(isA<ObjectDisposedError>()));
     });
-    test("Logging", (){
+    test("Logging", () {
       final l = serviceProvider.getRequiredLogger<MySingletonService>();
       l.info("Log message test for $MySingletonService.");
       final scope = serviceProvider.createScope();
