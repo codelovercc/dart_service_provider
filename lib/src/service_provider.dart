@@ -1,5 +1,7 @@
 import 'dart:collection';
 
+import 'package:dart_logging_abstraction/dart_logging_abstraction.dart';
+
 /// 服务生命周期
 enum ServiceLifeTime {
   /// 单例，在相同根服务容器中中只会存在一个实例
@@ -205,6 +207,7 @@ class ServiceDescriptor<TService, TImplementation extends TService> {
 class _ServiceProviderScope implements IServiceScope, IServiceProvider, IServiceScopeFactory {
   bool _disposed = false;
   final List<Object> _disposables = [];
+  ILogger4<IServiceProvider>? _logger;
 
   /// 是否为根作用域
   ///
@@ -220,7 +223,15 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
   /// 根服务提供器
   final ServiceProvider _rootProvider;
 
-  _ServiceProviderScope._({required ServiceProvider rootProvider, required this.isRoot}) : _rootProvider = rootProvider;
+  _ServiceProviderScope._({required ServiceProvider rootProvider, required this.isRoot})
+      : _rootProvider = rootProvider {
+    _logger = getTypedService<ILoggerFactory>()?.createLogger<IServiceProvider>();
+    // 如果日志器是可释放的，则会捕获它，它会随着作用域释放而被释放
+    if (_logger != null) {
+      _captureDisables(_logger!);
+    }
+    _logger?.debug("Service scope $hashCode constructing, root: $isRoot");
+  }
 
   /// 释放由当前作用域缓存的服务
   @override
@@ -229,6 +240,8 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
       return;
     }
     _disposed = true;
+    // 如果日志器是可释放的，那么它存在于_disposables中，会被本方法释放，在被释放之前使用。
+    _logger?.debug("Services scope $hashCode is disposing, root: $isRoot");
     for (final d in _disposables) {
       // 在同步的释放方法中，优先调用实现了IDisposable.dispose方法
       if (d is IDisposable) {
@@ -251,6 +264,8 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
       return;
     }
     _disposed = true;
+    // 如果日志器是可释放的，那么它存在于_disposables中，会被本方法释放，在被释放之前使用。
+    _logger?.debug("Services scope $hashCode is disposing asynchronous, root: $isRoot");
     for (final d in _disposables) {
       // 在异步的释放方法中，优先调用 IAsyncDisposable.disposeAsync方法
       if (d is IAsyncDisposable) {
@@ -290,30 +305,12 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
     }
   }
 
-  /// 查找内置服务
-  ///
-  /// 返回records类型, [isBuildIn] 指示是否为内置服务，如果为`true`，那么[serviceInstance]有值，否则[isBuildIn]为`false`，[serviceInstance]为`null`
-  ///
-  /// 注意，如果添加了新的内置服务，那么需要更新这个方法
-  (bool isBuildIn, Object? serviceInstance) _fetchBuildInService(Type serviceType) {
-    _throwIfDisposed();
-    if (serviceType == IServiceProvider) {
-      return (true, this);
-    }
-    if (serviceType == IServiceProviderIsService) {
-      return (true, _rootProvider);
-    }
-    if (serviceType == IServiceScopeFactory) {
-      return (true, _rootProvider._rootScope);
-    }
-    return (false, null);
-  }
-
   Object _getOrAdd(ServiceDescriptor descriptor) {
     _throwIfDisposed();
     if (_servicesCache.containsKey(descriptor)) {
       return _servicesCache[descriptor]!;
     }
+    _logger?.debug("Getting service: $descriptor");
     switch (descriptor.lifeTime) {
       case ServiceLifeTime.singleton:
         {
@@ -390,18 +387,6 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
     _rootScope = _ServiceProviderScope._(rootProvider: this, isRoot: true);
   }
 
-  ServiceDescriptor? _findDescriptor(Type serviceType) {
-    _throwIfDisposed();
-    final identifier = _ServiceIdentifier.fromType(serviceType);
-    for (var i = _descriptors.length - 1; i >= 0; i--) {
-      final d = _descriptors[i];
-      if (identifier == _ServiceIdentifier.fromDescriptor(d)) {
-        return d;
-      }
-    }
-    return null;
-  }
-
   Iterable<ServiceDescriptor> _findDescriptors(Type serviceType) {
     _throwIfDisposed();
     final identifier = _ServiceIdentifier.fromType(serviceType);
@@ -416,12 +401,12 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
 
   Object? _getServiceByType(Type serviceType, _ServiceProviderScope scope) {
     _throwIfDisposed();
-    var (isBuildIn, instance) = scope._fetchBuildInService(serviceType);
+    var (isBuildIn, instance) = _fetchBuildInService(serviceType, scope);
     if (isBuildIn) {
       assert(instance != null, "Build in service instance can not be null when fetch a build in service.");
       return instance;
     }
-    final d = _findDescriptor(serviceType);
+    final d = _findDescriptors(serviceType).lastOrNull;
     if (d == null) {
       return null;
     }
@@ -430,7 +415,7 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
 
   Iterable<Object> _getServicesByType(Type serviceType, _ServiceProviderScope scope) {
     _throwIfDisposed();
-    var (isBuildIn, instance) = scope._fetchBuildInService(serviceType);
+    var (isBuildIn, instance) = _fetchBuildInService(serviceType, scope);
     if (isBuildIn) {
       assert(instance != null, "Build in service instance can not be null when fetch a build in service.");
       return [instance!];
@@ -483,6 +468,25 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
     if (_disposed) {
       throw ObjectDisposedError("Scope has been disposed.");
     }
+  }
+
+  /// 查找内置服务
+  ///
+  /// 返回records类型, [isBuildIn] 指示是否为内置服务，如果为`true`，那么[serviceInstance]有值，否则[isBuildIn]为`false`，[serviceInstance]为`null`
+  ///
+  /// 注意，如果添加了新的内置服务，那么需要更新这个方法
+  (bool isBuildIn, Object? serviceInstance) _fetchBuildInService(Type serviceType, _ServiceProviderScope scope) {
+    _throwIfDisposed();
+    if (serviceType == IServiceProvider) {
+      return (true, scope);
+    }
+    if (serviceType == IServiceProviderIsService) {
+      return (true, this);
+    }
+    if (serviceType == IServiceScopeFactory) {
+      return (true, _rootScope);
+    }
+    return (false, null);
   }
 
   @override
@@ -618,7 +622,7 @@ extension EnumerableServiceCollectionExtensions on IServiceCollection {
 extension EditableServiceCollectionExtensions on IServiceCollection {
   /// 将所有[serviceType]类型的服务使用[decorator]重新装饰一次。
   ///
-  /// 该方法可用于修改现有的服务
+  /// 该方法可用于修改现有的服务。如果[decorator]更改了描述器的服务类型，则抛出[UnsupportedError]错误。
   void decorate(Type serviceType, Decorator decorator) {
     for (final d in this) {
       if (d.serviceType != serviceType) {
@@ -626,7 +630,9 @@ extension EditableServiceCollectionExtensions on IServiceCollection {
       }
       final index = indexOf(d);
       final d1 = decorator(d);
-      assert(d1.serviceType == serviceType, "Decorator can not change the origin service type.");
+      if (d1.serviceType != serviceType) {
+        throw UnsupportedError("Decorator can not change the origin service type.");
+      }
       this[index] = d1;
     }
   }
@@ -634,13 +640,24 @@ extension EditableServiceCollectionExtensions on IServiceCollection {
   /// 替换第一个服务类型为[serviceType]的描述器
   ///
   /// 如果[serviceType]已经注册，那么第一个匹配服务类型的描述器将会被删除，然后添加[descriptor];
-  /// 如果[serviceType]没有被注册，将直接添加[descriptor]
+  /// 如果[serviceType]没有被注册，将直接添加[descriptor]。
+  ///
+  /// 如果[descriptor]的服务类型与[serviceType]类型不同，则抛出[UnsupportedError]错误。
   void replace(Type serviceType, ServiceDescriptor descriptor) {
-    var index = indexWhere((e) => e.serviceType == serviceType);
+    if (descriptor.serviceType != serviceType) {
+      throw UnsupportedError("The service type can not be changed.");
+    }
+    final index = indexWhere((e) => e.serviceType == serviceType);
     if (index > -1) {
       remove(this[index]);
     }
     add(descriptor);
+  }
+
+  /// 替换第一个服务类型为[serviceType]的描述器，本方法确保[descriptor]类型安全
+  void replaceService<TService, TImplementation extends TService>(
+      ServiceDescriptor<TService, TImplementation> descriptor) {
+    replace(TService, descriptor);
   }
 }
 

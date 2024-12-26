@@ -8,6 +8,8 @@ void main() {
     late ServiceProvider serviceProvider;
     setUp(() {
       services = ServiceCollection()
+        // 添加默认的日志服务
+        ..addLogging()
         // 普通添加
         ..addSingleton<IMySingletonService, MySingletonService>((_) => MySingletonService())
         ..addSingletonInstance<IMySingletonService, MySingletonServiceInstanced>(MySingletonServiceInstanced())

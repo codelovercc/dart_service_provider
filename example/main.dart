@@ -2,6 +2,8 @@ import 'package:dart_service_provider/dart_service_provider.dart';
 
 void main() {
   final services = ServiceCollection()
+    // add the default logging services
+    ..addLogging()
     ..addSingleton<IMySingletonService, MySingletonService>((_) => MySingletonService())
     ..addScoped<IMyScopedService, MyScopedService>((_) => MyScopedService())
     ..addTransient<IMyTransientService, MyTransientService>((_) => MyTransientService())
