@@ -1,3 +1,4 @@
+import 'package:dart_logging_abstraction/dart_logging_abstraction.dart';
 import 'package:dart_service_provider/dart_service_provider.dart';
 import 'package:test/test.dart';
 
@@ -251,6 +252,14 @@ void main() {
       expect(() => p.createScope(), throwsA(isA<ObjectDisposedError>()));
       expect(() => p.getService(NotAService), throwsA(isA<ObjectDisposedError>()));
       expect(() => p.getServices(NotAService), throwsA(isA<ObjectDisposedError>()));
+    });
+    test("Logging", (){
+      final l = serviceProvider.getRequiredLogger<MySingletonService>();
+      l.info("Log message test for $MySingletonService.");
+      final scope = serviceProvider.createScope();
+      final l1 = serviceProvider.getRequiredLogger<MyScopedService>();
+      l1.info("Log message test for $MyScopedService.");
+      scope.dispose();
     });
     tearDown(() => serviceProvider.dispose());
   });
