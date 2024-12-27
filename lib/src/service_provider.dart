@@ -173,14 +173,14 @@ class ServiceDescriptor<TService, TImplementation extends TService> {
 
   @override
   String toString() {
-    var buff = StringBuffer("ServiceType: $serviceType LifeTime: ${lifeTime.name} ");
+    var buff = StringBuffer("ServiceType: $serviceType LifeTime: ${lifeTime.name}");
     if (serviceInstance != null) {
-      buff.write("ImplementationType: ${serviceInstance.runtimeType}");
+      buff.write(" ImplementationType: ${serviceInstance.runtimeType}");
     } else {
-      buff.write("ImplementationType: $implementationType");
+      buff.write(" ImplementationType: $implementationType");
     }
     if (lifeTime == ServiceLifeTime.singleton) {
-      buff.write("Factory: ${factory != null}");
+      buff.write(" Factory: ${factory != null}");
     }
 
     return buff.toString();
