@@ -1,9 +1,11 @@
 import 'package:dart_service_provider/dart_service_provider.dart';
+import 'package:dart_service_provider/src/environment.dart';
 
 void main() {
   final services = ServiceCollection()
     // add the default logging services
     ..addLogging()
+    ..addEnvironment<Environment>(Environment(name: Environments.development))
     ..addSingleton<IMySingletonService, MySingletonService>((_) => MySingletonService())
     ..addScoped<IMyScopedService, MyScopedService>((_) => MyScopedService())
     ..addTransient<IMyTransientService, MyTransientService>((_) => MyTransientService())
@@ -16,6 +18,8 @@ void main() {
     );
 
   final serviceProvider = services.buildServiceProvider();
+  final environment = serviceProvider.getRequiredService<IEnvironment>();
+  assert(environment.isDevelopment);
   final singletonService = serviceProvider.getRequiredService<IMySingletonService>();
   final transientService = serviceProvider.getRequiredService<IMyTransientService>();
   // Scoping

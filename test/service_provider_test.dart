@@ -1,5 +1,6 @@
 import 'package:dart_logging_abstraction/dart_logging_abstraction.dart';
 import 'package:dart_service_provider/dart_service_provider.dart';
+import 'package:dart_service_provider/src/environment.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -11,6 +12,7 @@ void main() {
       services = ServiceCollection()
         // 添加默认的日志服务
         ..addLogging()
+        ..addEnvironment<Environment>(Environment(name: Environments.testing))
         // 普通添加
         ..addSingleton<IMySingletonService, MySingletonService>((_) => MySingletonService())
         ..addSingletonInstance<IMySingletonService, MySingletonServiceInstanced>(MySingletonServiceInstanced())
@@ -76,6 +78,10 @@ void main() {
             (_) => MyScopedAsyncDisposableService());
       print("ServiceCollection ${services.hashCode} configured");
       serviceProvider = services.buildServiceProvider();
+    });
+    test("Environment should be testing", () {
+      final environment = serviceProvider.getRequiredService<IEnvironment>();
+      expect(environment.isTesting, isTrue);
     });
     test("ServiceCollection should contains two IMySingletonService descriptor according configure", () {
       expect(services.where((e) => e.serviceType == IMySingletonService).length, equals(2));
