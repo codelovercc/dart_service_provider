@@ -13,7 +13,7 @@ and the Flutter guide for
 
 # dart_service_provider
 
-[![pub package](https://img.shields.io/pub/v/dart_service_provider?logo=dart&logoColor=00b9fc)](https://pub.dartlang.org/packages/dart_service_provider)
+[![pub package](https://img.shields.io/pub/v/dart_service_provider?logo=dart&logoColor=00b9fc)](https://pub.dev/packages/dart_service_provider)
 [![CI](https://img.shields.io/github/actions/workflow/status/codelovercc/dart_service_provider/dart.yml?branch=main&logo=github-actions&logoColor=white)](https://github.com/codelovercc/dart_service_provider/actions)
 [![Last Commits](https://img.shields.io/github/last-commit/codelovercc/dart_service_provider?logo=git&logoColor=white)](https://github.com/codelovercc/dart_service_provider/commits/main)
 [![Pull Requests](https://img.shields.io/github/issues-pr/codelovercc/dart_service_provider?logo=github&logoColor=white)](https://github.com/codelovercc/dart_service_provider/pulls)
