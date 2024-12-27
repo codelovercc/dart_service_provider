@@ -26,36 +26,6 @@ An services dependency provider, like dependency inject, easy to learn and easy 
 
 Provide services life time control with singleton, scoped, transient.
 
-### Logging
-
-#### Enable default logging
-
-```dart
-
-final services = ServiceCollection()
-// add the default logging services
-  ..addLogging();
-```
-
-#### Custom logging:
-
-```dart
-
-final services = ServiceCollection()
-// add the default logging services
-  ..addLogging((loggingBuilder) {
-    // Custom your logging services
-  });
-```
-
-How to custom logging services:
-
-- Implement `ILoggerFactory` interface, then call `addLogging` extension method on
-  `ServiceCollection`, Specify the `config` argument.
-- Optional implement `ILogger` and `ILogger4` interfaces, implement `ILogger4` is recommended.
-- If you implementations does not need `LoggerOptions` service, please
-  call the `LoggingBuilderExtensions.removeOptions` extension method to delete it.
-
 ## Getting started
 
 ```dart
@@ -169,12 +139,59 @@ void main() {
 class MyService {}
 ```
 
+### Logging
+
+#### Enable default logging
+
+```dart
+
+final services = ServiceCollection()
+// add the default logging services
+  ..addLogging();
+```
+
+#### Custom logging:
+
+```dart
+
+final services = ServiceCollection()
+// add the default logging services
+  ..addLogging((loggingBuilder) {
+    // Custom your logging services
+  });
+```
+
+How to custom logging services:
+
+- Implement `ILoggerFactory` interface, then call `addLogging` extension method on
+  `ServiceCollection`, Specify the `config` argument.
+- Optional implement `ILogger` and `ILogger4` interfaces, implement `ILogger4` is recommended.
+- If you implementations does not need `LoggerOptions` service, please
+  call the `LoggingBuilderExtensions.removeOptions` extension method to delete it.
+
+## Environment
+
+Provide environment service.
+
+```dart
+void main() {
+  final services = ServiceCollection();
+  // Add environment service
+  services.addEnvironment<Evironment>(Environment(name: Environments.production));
+  final provider = services.buildServiceProvider();
+  final env = provider.getRequiredService<IEnvironment>();
+  print(env.isProduction); // true
+}
+```
+
+You can detect the environment and change the application behavior at runtime.
+
 ## Additional information
 
 If you have any issues or suggests please redirect
 to [repo](https://github.com/codelovercc/dart_service_provider)
 or [send an email](mailto:codelovercc@gmail.com) to me.
 
-## todo
+## Todo
 
 Use annotations and code generator to support real Dependency inject.
