@@ -228,7 +228,7 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
 
   _ServiceProviderScope._({required ServiceProvider rootProvider, required this.isRoot})
       : _rootProvider = rootProvider {
-    _logger = getTypedService<ILoggerFactory>()?.createLogger<IServiceProvider>();
+    _logger = getTypedService<ILoggerFactory>()?.createLogger<ServiceProvider>();
     // 如果日志器是可释放的，则会捕获它，它会随着作用域释放而被释放
     if (_logger != null) {
       _captureDisables(_logger!);
