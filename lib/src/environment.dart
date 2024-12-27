@@ -31,19 +31,19 @@ final class Environments {
   static const String testing = "Testing";
 }
 
-/// Provide environment check methods
+/// Provide environment check
 extension EnvironmentExtensions on IEnvironment {
   /// Check if the environment is production
-  bool isProduction() => name == Environments.production;
+  bool get isProduction => name == Environments.production;
 
   /// Check if the environment is development
-  bool isDevelopment() => name == Environments.development;
+  bool get isDevelopment => name == Environments.development;
 
   /// Check if the environment is staging
-  bool isStaging() => name == Environments.staging;
+  bool get isStaging => name == Environments.staging;
 
   /// Check if the environment is testing
-  bool isTesting() => name == Environments.testing;
+  bool get isTesting => name == Environments.testing;
 }
 
 /// Environment service extension methods
