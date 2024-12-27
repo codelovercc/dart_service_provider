@@ -1,4 +1,5 @@
 import 'package:dart_logging_abstraction/dart_logging_abstraction.dart';
+import 'package:dart_service_provider/src/environment.dart';
 
 import 'service_provider.dart';
 
@@ -57,7 +58,11 @@ extension LoggingBuilderExtensions on LoggingBuilder {
   /// Try use console log as the logging services.
   void tryUseConsoleLog() {
     tryAddOptions<LoggerOptions>(
-      (_) => const LoggerOptions(minLevel: LogLevel.debug, defaultLoggerName: "Global"),
+      (p) {
+        final LogLevel logLevel =
+            p.getTypedService<IEnvironment>()?.isProduction == true ? LogLevel.info : LogLevel.debug;
+        return LoggerOptions(minLevel: logLevel, defaultLoggerName: "Global");
+      },
     );
     tryAddLoggerFactory<LoggerFactory>(
       (p) {
