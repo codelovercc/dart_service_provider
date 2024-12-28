@@ -3,3 +3,4 @@ library;
 
 export 'src/service_provider.dart';
 export 'src/logging.dart';
+export 'src/environment.dart';
