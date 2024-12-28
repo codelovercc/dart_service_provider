@@ -1,5 +1,4 @@
 import 'package:dart_service_provider/dart_service_provider.dart';
-import 'package:dart_service_provider/src/environment.dart';
 
 void main() {
   final services = ServiceCollection()

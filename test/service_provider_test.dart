@@ -1,6 +1,5 @@
 import 'package:dart_logging_abstraction/dart_logging_abstraction.dart';
 import 'package:dart_service_provider/dart_service_provider.dart';
-import 'package:dart_service_provider/src/environment.dart';
 import 'package:test/test.dart';
 
 void main() {
