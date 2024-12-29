@@ -1,3 +1,9 @@
+## 1.0.5
+
+Break changes:
+
+- Rename `LoggingBuilder.tryAddLogger` to `LoggingBuilder.tryAddGlobalLogger`
+
 ## 1.0.3
 
 - Add environment service support.
