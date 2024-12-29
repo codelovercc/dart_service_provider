@@ -113,6 +113,22 @@ extension LoggingBuilderExtensions on LoggingBuilder {
 }
 
 extension LoggingServiceProviderExtensions on IServiceProvider {
+  /// Get the optional [ILoggerFactory]
+  ILoggerFactory? getLoggerFactory() => getTypedService<ILoggerFactory>();
+
+  /// Get the required [ILoggerFactory]
+  ///
+  /// Throws [ServiceNotFoundError] while the logging service is not enabled.
+  ILoggerFactory getRequiredLoggerFactory() {
+    final f = getLoggerFactory();
+    if (f == null) {
+      throw ServiceNotFoundError(
+          "$ILoggerFactory service does not exists, you have to call `addLogging` extension method on the $ServiceCollection instance for enable logging.",
+          ILoggerFactory);
+    }
+    return f;
+  }
+
   /// Get the optional [ILogger] instance.
   ///
   /// - [T] the type uses to create [ILogger] instance.
@@ -133,7 +149,9 @@ extension LoggingServiceProviderExtensions on IServiceProvider {
   ///
   /// - [T] the type uses to create [ILogger] instance.
   ///
-  /// returns the [ILogger] instance if the logging services configured, otherwise returns `null`.
+  /// Returns the [ILogger] instance.
+  ///
+  /// Throws [ServiceNotFoundError] while the logging service is not enabled.
   ///
   /// Note: Do not implement [ILogger] as an [IDisposable] or an [IAsyncDisposable], it should be implement normally,
   /// you can implement [ILoggerFactory] as singleton and disposable service.
