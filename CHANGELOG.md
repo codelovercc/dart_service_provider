@@ -3,6 +3,7 @@
 Break changes:
 
 - Rename `LoggingBuilder.tryAddLogger` to `LoggingBuilder.tryAddGlobalLogger`
+- Rename `LoggingBuilder.replaceLogger` to `LoggingBuilder.replaceGlobalLogger`
 
 ## 1.0.3
 
