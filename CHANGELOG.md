@@ -1,9 +1,17 @@
+## 1.0.6
+
+- Add `LoggingServiceProviderExtensions.getLoggerFactory` extension method.
+
 ## 1.0.5
 
 Breaking changes:
 
 - Rename `LoggingBuilder.tryAddLogger` to `LoggingBuilder.tryAddGlobalLogger`
 - Rename `LoggingBuilder.replaceLogger` to `LoggingBuilder.replaceGlobalLogger`
+
+## 1.0.4
+
+- Export `src/environment.dart`
 
 ## 1.0.3
 
