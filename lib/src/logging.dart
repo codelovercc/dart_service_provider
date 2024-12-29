@@ -70,7 +70,7 @@ extension LoggingBuilderExtensions on LoggingBuilder {
         return LoggerFactory(minLevel: options.minLevel);
       },
     );
-    tryAddLogger<ILogger>(
+    tryAddGlobalLogger<ILogger>(
       (p) {
         final options = p.getRequiredService<LoggerOptions>();
         final factory = p.getRequiredService<ILoggerFactory>();
@@ -88,7 +88,7 @@ extension LoggingBuilderExtensions on LoggingBuilder {
       services.tryAddSingleton<ILoggerFactory, TFactoryImpl>(factory);
 
   /// Try to add global [ILogger] service as singleton.
-  void tryAddLogger<TLoggerImpl extends ILogger>(ServiceFactory<TLoggerImpl> factory) =>
+  void tryAddGlobalLogger<TLoggerImpl extends ILogger>(ServiceFactory<TLoggerImpl> factory) =>
       services.tryAddSingleton<ILogger, TLoggerImpl>(factory);
 
   /// Replace the [LoggerOptions] service.
@@ -102,7 +102,7 @@ extension LoggingBuilderExtensions on LoggingBuilder {
           ServiceDescriptor<ILoggerFactory, TFactoryImpl>.singleton(factory: factory));
 
   /// Replace global [ILogger] service.
-  void replaceLogger<TLoggerImpl extends ILogger>(ServiceFactory<TLoggerImpl> factory) => services
+  void replaceGlobalLogger<TLoggerImpl extends ILogger>(ServiceFactory<TLoggerImpl> factory) => services
       .replaceService<ILogger, TLoggerImpl>(ServiceDescriptor<ILogger, TLoggerImpl>.singleton(factory: factory));
 
   /// Remove [LoggerOptions] service.
