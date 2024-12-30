@@ -1,3 +1,7 @@
+## 1.0.7
+
+- Update dart_logging_abstraction package to 1.0.6
+
 ## 1.0.6
 
 - Add `LoggingServiceProviderExtensions.getLoggerFactory` extension method.
