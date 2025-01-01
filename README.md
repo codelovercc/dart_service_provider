@@ -130,7 +130,7 @@ class MyScopedDependencyService {
 ```dart
 void main() {
   final services = ServiceCollection();
-  services.addScoped<MyService, MyService>();
+  services.addSingleton<MyService, MyService>((_) => MyService());
   final rootProvider = services.buildServiceProvider();
   final myService = rootProvider.getRequiredService<MyService>();
   // myService.foo()
