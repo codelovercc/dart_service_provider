@@ -313,7 +313,7 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
     if (_servicesCache.containsKey(descriptor)) {
       return _servicesCache[descriptor]!;
     }
-    _logger?.debug("Getting service: $descriptor");
+    _logger?.debug("Creating, $descriptor");
     switch (descriptor.lifeTime) {
       case ServiceLifeTime.singleton:
         {
@@ -333,7 +333,7 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
       case ServiceLifeTime.scoped:
         {
           if (isRoot) {
-            throw InvalidScopeError("Scoped service can not provider by root.");
+            throw InvalidScopeError("Scoped service can not provide by root.");
           }
           var instance = descriptor.factory!(this);
           // 由服务容器创建的作用域服务，需要由容器负责释放
