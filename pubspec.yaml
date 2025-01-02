@@ -1,5 +1,5 @@
 name: dart_service_provider
-description: An services dependency provider, like dependency inject, easy to learn and easy to use.
+description: A services dependency provider, like dependency inject, easy to learn and easy to use.
 version: 1.0.7
 repository: https://github.com/codelovercc/dart_service_provider
 

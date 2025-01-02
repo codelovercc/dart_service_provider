@@ -20,7 +20,7 @@ and the Flutter guide for
 [![Code size](https://img.shields.io/github/languages/code-size/codelovercc/dart_service_provider?logo=github&logoColor=white)](https://github.com/codelovercc/dart_service_provider)
 [![License](https://img.shields.io/github/license/codelovercc/dart_service_provider?logo=open-source-initiative&logoColor=green)](https://github.com/codelovercc/dart_service_provider/blob/main/LICENSE)
 
-An services dependency provider, like dependency inject, easy to learn and easy to use.
+A services dependency provider, like dependency inject, easy to learn and easy to use.
 
 ## Features
 
