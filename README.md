@@ -192,6 +192,10 @@ If you have any issues or suggests please redirect
 to [repo](https://github.com/codelovercc/dart_service_provider)
 or [send an email](mailto:codelovercc@gmail.com) to me.
 
+### Flutter
+
+In flutter, you can use [flutter_service_provider](https://pub.dev/packages/flutter_service_provider).
+
 ## Todo
 
 Use annotations and code generator to support real Dependency inject.
