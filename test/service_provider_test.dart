@@ -78,6 +78,7 @@ void main() {
       print("ServiceCollection ${services.hashCode} configured");
       serviceProvider = services.buildServiceProvider();
     });
+    tearDown(() => serviceProvider.dispose());
     test("Environment should be testing", () {
       final environment = serviceProvider.getRequiredService<IEnvironment>();
       expect(environment.isTesting, isTrue);
@@ -266,7 +267,6 @@ void main() {
       l1.info("Log message test for $MyScopedService.");
       scope.dispose();
     });
-    tearDown(() => serviceProvider.dispose());
   });
 }
 
