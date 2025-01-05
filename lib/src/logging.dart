@@ -64,10 +64,10 @@ extension LoggingBuilderExtensions on LoggingBuilder {
         return LoggerOptions(minLevel: logLevel, defaultLoggerName: "Global");
       },
     );
-    tryAddLoggerFactory<LoggerFactory>(
+    tryAddLoggerFactory<ConsoleLoggerFactory>(
       (p) {
         final options = p.getRequiredService<LoggerOptions>();
-        return LoggerFactory(minLevel: options.minLevel);
+        return ConsoleLoggerFactory(minLevel: options.minLevel);
       },
     );
     tryAddGlobalLogger<ILogger>(
