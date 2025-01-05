@@ -1,3 +1,8 @@
+## 1.1.0
+
+- Update dart_logging_abstraction package to 1.1.0
+- Document updates.
+
 ## 1.0.7
 
 - Update dart_logging_abstraction package to 1.0.6
