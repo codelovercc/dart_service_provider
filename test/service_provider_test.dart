@@ -4,7 +4,7 @@ import 'package:test/test.dart';
 
 void main() {
   group('Service Provider', () {
-    // 后期新增测试时，不要改动这里的代码，请通过新的测试组来测试新的功能
+    // When adding new tests in the future, don't change the code here, please use a new test group to test the new features
     late ServiceCollection services;
     late ServiceProvider serviceProvider;
     setUp(() {

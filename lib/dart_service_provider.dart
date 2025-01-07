@@ -1,4 +1,4 @@
-/// 提供服务对象的生命周期管理与实例解析
+/// Lifecycle management and instance resolution of service objects.
 library;
 
 export 'src/service_provider.dart';

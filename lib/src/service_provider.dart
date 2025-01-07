@@ -2,137 +2,140 @@ import 'dart:collection';
 
 import 'package:dart_logging_abstraction/dart_logging_abstraction.dart';
 
-/// 服务生命周期
+/// Service life-time
 enum ServiceLifeTime {
-  /// 单例，在相同根服务容器中中只会存在一个实例
+  /// Singleton, where only one instance exists in the same root service container
   ///
-  /// 在添加单例服务时，如果使用了现有实例添加到服务容器，那么该单例由使用者负责释放。
+  /// When adding a singleton service, if an existing instance is added to the service container, the user is responsible for releasing the singleton.
   singleton,
 
-  /// 作用域的，在不同的作用域DI容器中实例不相同
+  /// Scoped, the instances are not the same in different scoped service containers
   ///
-  /// 作用域服务由服务容器释放。在不同的作用域中将创建不同的实例，在根服务容器中，不允许请求作用域服务，将抛出错误。
+  /// Scoped services are released by service containers.
+  /// Different instances will be created in different scopes, and in the root service container,
+  /// requests to scoped services are not allowed, and an error will be thrown.
   scoped,
 
-  /// 瞬时的，每次请求都会创建一个新的实例
+  /// Transient, a new instance is created with each request.
   ///
-  /// 每次请求瞬时服务时，都将创建一个新的实例。瞬时服务不由服务容器释放，从服务容器获取后，由其使用者进行释放。
+  /// Each time an transient service is requested, a new instance is created.
+  /// Transient services are not released by service containers, but are released by their consumers after they are obtained from service containers.
   transient,
 }
 
-/// 对象已经被释放无法再被使用的错误。
+/// Error that the object has been released and can no longer be used.
 class ObjectDisposedError extends StateError {
   ObjectDisposedError(super.message);
 }
 
-/// 表示在根作用域中获取作用域服务的错误
+/// Indicates an error that gets a scoped service in the root scope.
 ///
-/// 作用域服务不能在根服务容器中获取，需要使用服务提供器创建一个作用域再进行获取。
+/// Scoped services cannot be obtained in the root service container,
+/// and you need to use the service provider to create a scope and then obtain them.
 class InvalidScopeError extends StateError {
   InvalidScopeError(super.message);
 }
 
-/// 表示服务未找到的错误
+/// Indicates an error that service was not found.
 class ServiceNotFoundError extends StateError {
-  /// 未注册的服务类型
+  /// The type of service that is not registered
   final Type serviceType;
 
   ServiceNotFoundError(super.message, this.serviceType);
 }
 
-/// 表示需要释放资源的接口
+/// Indicates the interface for which resources need to be released.
 abstract interface class IDisposable {
-  /// 释放需要手动释放的资源
+  /// Release resources that need to be released.
   ///
-  /// 注意在释放资源时要确保不抛出任何异常
+  /// Note: Make sure that no exceptions are thrown when releasing resources
   void dispose();
 }
 
-/// 用于异步释放资源
-///
-/// 由于在同步的[IDisposable]中，无法等待[disposeAsync]完成，因此慎重使用该接口，在使用时要测试确保[disposeAsync]在应用结束前执行完成清理。
+/// Used to release resources asynchronously.
 abstract interface class IAsyncDisposable {
-  /// 异步释放需要手动释放的资源
+  /// Asynchronously release resources that need to be released.
   ///
-  /// 注意在释放资源时要确保不抛出任何异常
+  /// Note: Make sure that no exceptions are thrown when releasing resources
   Future<void> disposeAsync();
 }
 
-/// 服务集合接口，用于配置和添加服务
+/// A service collection interface for configuring and adding services.
 abstract interface class IServiceCollection implements List<ServiceDescriptor> {}
 
-/// 服务提供器接口
+/// Service provider interface
 ///
-/// 该接口同时为内置的服务，在根服务容器中请求[IServiceProvider]时，将获取到根[ServiceProvider]，在作用域中获取时，为作用域关联的[IServiceProvider]
+/// This interface is also a built-in service,
+/// and when you request [IServiceProvider] in the root service container,
+/// it will be the root [ServiceProvider], and when you get it in the scope,
+/// it will be the [IServiceProvider] associated with the scope.
 abstract interface class IServiceProvider {
-  /// 使用服务类型来获取服务
+  /// Use the service type to get the service.
   ///
-  /// 当[serviceType]没有注册时，返回`null`
+  /// When [serviceType] is not registered, `null` is returned.
   Object? getService(Type serviceType);
 
-  /// 使用服务类型来获取相同服务类型的服务实现实例
+  /// Use the service type to get an instance enumeration of service implementations of the same service type.
   ///
-  /// 当[serviceType]没有注册时，返回空的枚举
+  /// When [serviceType] is not registered, an empty enum is returned.
   Iterable<Object> getServices(Type serviceType);
 }
 
-/// 用于检测一个类型是否被注册为服务
+/// Used to detect whether a type is registered as a service.
 ///
-/// 该服务为内置的单例服务
+/// The service is a built-in singleton service.
 abstract interface class IServiceProviderIsService {
-  /// 检测[serviceType]是否被注册为服务
+  /// Detect if [serviceType] is registered as a service
   ///
-  /// 如果[serviceType]被注册为服务则返回`true`，否则返回`false`
+  /// Returns 'true' if [serviceType] is registered as a service, 'false' if otherwise
   bool isService(Type serviceType);
 }
 
-/// 服务作用域
+/// Service scope
 abstract interface class IServiceScope implements IDisposable, IAsyncDisposable {
-  /// 获取与该作用域关联的服务提供器
+  /// Gets the service provider associated with that scope
   IServiceProvider get serviceProvider;
 }
 
-/// 服务作用域工厂
+/// Service Scope Factory
 ///
-/// 该服务为内置的单例服务
+/// The service is a built-in singleton service
 abstract interface class IServiceScopeFactory {
-  /// 创建一个作用域
+  /// Create a scope
   IServiceScope createScope();
 }
 
-/// 服务工厂
+/// Service Factory
 ///
-/// [T] 为返回类型，可以是服务类型，也可以是服务实现类型
+/// [T] is the return type, which can be either a service type or a service implementation type.
 ///
-/// 返回[T]类型的实例，该工厂方法接收一个[IServiceProvider]做为参数。
+/// Returns an instance of type [T], and the factory method receives an [IServiceProvider] as a parameter.
 ///
-/// 如果服务是[ServiceLifeTime.singleton]，那么[IServiceProvider]为根服务提供器，如果单例服务依赖了作用域服务，
-// /// 则瞬时服务需要依赖[IServiceProvider]服务，并在内部创建一个新的作用域来获取其它作用域服务；
-/// 如果服务是[ServiceLifeTime.scoped]，那么[IServiceProvider]为对应作用域的服务提供器；
-/// 如果服务是[ServiceLifeTime.transient]，那么[IServiceProvider]为根服务提供器，如果瞬时服务依赖了作用域服务，
-/// 则瞬时服务需要依赖[IServiceProvider]服务，并在内部创建一个新的作用域来获取其它作用域服务。
+/// If the service is [ServiceLifeTime.singleton], then [IServiceProvider] is the root service provider;
+/// If the service is [ServiceLifeTime.scoped], then [IServiceProvider] is the service provider of the corresponding scope;
+/// If the service is [ServiceLifeTime.transient], then [IServiceProvider] is the root service provider.
 typedef ServiceFactory<T> = T Function(IServiceProvider provider);
 
-/// 服务描述器
+/// Service Descriptor
 ///
-/// - [TService] 服务类型
-/// - [TImplementation] 服务的实现类型
+/// - [TService] Type of service
+/// - [TImplementation] The type of implementation of the service
 ///
-/// [TImplementation]可以是[TService]的子类或[TService]类型。
+/// [TImplementation] can be a subclass of [TService] or a type of [TService].
 class ServiceDescriptor<TService, TImplementation extends TService> {
-  /// 服务类型
+  /// Type of service
   final Type serviceType;
 
-  /// 服务实现类型，可能与[serviceType]相同
+  /// The type of service implementation, which may be the same as [serviceType].
   final Type implementationType;
 
-  /// 服务的生命周期
+  /// Lifecycle of the service
   final ServiceLifeTime lifeTime;
 
-  /// 服务的实例，单例服务专用
+  /// An instance of the service, dedicated to a singleton service
   final TService? serviceInstance;
 
-  /// 服务的工厂，只有在使用服务实例创建单例服务描述器时，该工厂才会为`null`。
+  /// The factory of the service, which will only be `null` if a singleton service descriptor is created using a service instance.
   final ServiceFactory<TImplementation>? factory;
 
   const ServiceDescriptor._({required this.lifeTime, required this.factory})
@@ -141,9 +144,9 @@ class ServiceDescriptor<TService, TImplementation extends TService> {
         serviceInstance = null,
         assert(TService != Object, "Service type can not be type `Object`.");
 
-  /// 使用一个服务实例来创建单例服务描述器
+  /// Use a service instance to create a singleton service descriptor
   ///
-  /// 使用现有实例的单例服务不由服务容器释放，调用者需要自动释放
+  /// A singleton service that uses an existing instance is not released by the service container, and the caller needs to be released automatically
   const ServiceDescriptor.instance({required TService this.serviceInstance})
       : serviceType = TService,
         implementationType = TImplementation,
@@ -151,23 +154,26 @@ class ServiceDescriptor<TService, TImplementation extends TService> {
         factory = null,
         assert(TService != Object, "Service type can not be type `Object`.");
 
-  /// 使用现有实例创建一个单例的服务描述器
+  /// Create a singleton service descriptor using an existing instance
   ///
-  /// 使用[factory]服务工厂添加的服务始终由服务容器释放。
+  /// Singleton services added using a [factory] service factory are always released by the service container.
   const ServiceDescriptor.singleton({required ServiceFactory<TImplementation> factory})
       : this._(lifeTime: ServiceLifeTime.singleton, factory: factory);
 
-  /// 创建一个作用域服务描述器
+  /// Create a scoped service descriptor
   ///
-  /// 作用域服务由服务容器释放。在不同的作用域中将创建不同的实例，在根服务容器中，不允许请求作用域服务，将抛出错误。
+  /// Scoped services are released by service containers.
+  /// Different instances will be created in different scopes,
+  /// and in the root service container, requests to scoped services are not allowed, and an error will be thrown.
   ///
-  /// 使用[factory]服务工厂添加的服务始终由服务容器释放。
+  /// Scoped services added using a [factory] service factory are always released by the service container.
   const ServiceDescriptor.scoped({required ServiceFactory<TImplementation> factory})
       : this._(lifeTime: ServiceLifeTime.scoped, factory: factory);
 
-  /// 创建一个瞬时服务描述器
+  /// Create a transient service descriptor
   ///
-  /// 每次请求瞬时服务时，都将创建一个新的实例。瞬时服务不由服务容器释放，从服务容器获取后，由其使用者进行释放。
+  /// Each time an transient service is requested, a new instance is created.
+  /// Transient services are not released by service containers, but are released by their consumers after they are obtained from service containers.
   const ServiceDescriptor.transient({required ServiceFactory<TImplementation> factory})
       : this._(lifeTime: ServiceLifeTime.transient, factory: factory);
 
@@ -206,53 +212,57 @@ class ServiceDescriptor<TService, TImplementation extends TService> {
       factory.hashCode;
 }
 
-/// 服务作用域默认实现
+/// The default implementation of [IServiceScope].
 class _ServiceProviderScope implements IServiceScope, IServiceProvider, IServiceScopeFactory {
   bool _disposed = false;
   final List<Object> _disposables = [];
   ILogger4<IServiceProvider>? _logger;
 
-  /// 是否为根作用域
+  /// Whether it is root scoped
   ///
-  /// 根作用域负责管理单例实例的生命周期
+  /// The root scope is responsible for managing the lifecycle of a singleton instance
   final bool isRoot;
 
-  /// 当前作用域缓存的服务
+  /// The service of the currently scoped cache
   ///
-  /// 如果[isRoot]为`true`，表示当前作用域为根作用域，根作用域只缓存由它创建的单例服务;
-  /// 否则缓存当前作用域的服务；瞬时服务始终不会被缓存，它的生命周期由使用者负责。
+  /// If [isRoot] is `true`, the current scope is the root scope,
+  /// and the root scope caches only the singleton services created by it;
+  /// Otherwise, cache the currently scoped service;
+  /// Transient services are never cached, and their lifecycle is the responsibility of the consumer.
   final Map<ServiceDescriptor, Object> _servicesCache = {};
 
-  /// 根服务提供器
+  /// Root Service Provider
   final ServiceProvider _rootProvider;
 
   _ServiceProviderScope._({required ServiceProvider rootProvider, required this.isRoot})
       : _rootProvider = rootProvider {
     _logger = getTypedService<ILoggerFactory>()?.createLogger<ServiceProvider>();
-    // 如果日志器是可释放的，则会捕获它，它会随着作用域释放而被释放
+    // If the logger is disposable, it is captured, and it is released with the scope release
     if (_logger != null) {
       _captureDisables(_logger!);
     }
     _logger?.debug("Service scope $hashCode constructing, root: $isRoot");
   }
 
-  /// 释放由当前作用域缓存的服务
+  /// Release the service cached by the current scope
   @override
   void dispose() {
     if (_disposed == true) {
       return;
     }
     _disposed = true;
-    // 如果日志器是可释放的，那么它存在于_disposables中，会被本方法释放，在被释放之前使用。
+    // If the logger is disposable, then it exists in the _disposables and will be disposed of by this method before it is disposed.
     _logger?.debug("Services scope $hashCode is disposing, root: $isRoot");
     for (final d in _disposables) {
-      // 在同步的释放方法中，优先调用实现了IDisposable.dispose方法
+      // In the synchronous release method, the IDisposable.dispose method is implemented in a priority call
       if (d is IDisposable) {
         d.dispose();
         continue;
       }
-      // 异步释放无法在同步方法中等待，但是（https://dart.dev/libraries/async/async-await#example-introducing-futures）示例说明
-      // 在应用结束时，即使没有await，应用只会在event-loop为空时才退出。也就是说dart VM 会等待这些未被用户代码等待的异步任务结束后才退出应用。
+      // Asynchronous release cannot wait in the synchronous method,
+      // but (https://dart.dev/libraries/async/async-await#example-introducing-futures) example illustrates that
+      // at the end of the application, even without await, the application will only exit when the event-loop is empty.
+      // That is, the dart VM waits for the end of these asynchronous tasks that are not waited for by the user code before exiting the application.
       (d as IAsyncDisposable).disposeAsync();
     }
     _disposables.clear();
@@ -267,10 +277,10 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
       return;
     }
     _disposed = true;
-    // 如果日志器是可释放的，那么它存在于_disposables中，会被本方法释放，在被释放之前使用。
+    // In the synchronous release method, the IDisposable.dispose method is implemented in a priority call
     _logger?.debug("Services scope $hashCode is disposing asynchronous, root: $isRoot");
     for (final d in _disposables) {
-      // 在异步的释放方法中，优先调用 IAsyncDisposable.disposeAsync方法
+      // In an asynchronous release method, the IAsyncDisposable.disposeAsync method is called preferentially
       if (d is IAsyncDisposable) {
         await d.disposeAsync();
         continue;
@@ -321,9 +331,9 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
             if (descriptor.serviceInstance != null) {
               return descriptor.serviceInstance;
             }
-            // 当前对象是根作用域
+            // The current object is the root scope
             var instance = descriptor.factory!(this);
-            // 由服务容器创建的单例服务，需要由容器负责释放
+            // A singleton service created by a service container needs to be released by the container
             _captureDisables(instance);
             _servicesCache[descriptor] = instance;
             return instance;
@@ -336,7 +346,7 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
             throw InvalidScopeError("Scoped service can not provide by root.");
           }
           var instance = descriptor.factory!(this);
-          // 由服务容器创建的作用域服务，需要由容器负责释放
+          // A scoped service created by a service container needs to be released by the container
           _captureDisables(instance);
           _servicesCache[descriptor] = instance;
           return instance;
@@ -356,9 +366,9 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
   IServiceScope createScope() => _rootProvider._createScope();
 }
 
-/// 服务标识器
+/// Service Identifier
 ///
-/// 该实现目前以服务类型来标识一个服务
+/// The implementation currently identifies a service by its service type
 class _ServiceIdentifier {
   final Type serviceType;
 
@@ -372,20 +382,20 @@ class _ServiceIdentifier {
   @override
   int get hashCode => serviceType.hashCode;
 
-  /// 从服务描述器来创建一个服务标识
+  /// Create a service identity from the service descriptor
   _ServiceIdentifier.fromDescriptor(ServiceDescriptor descriptor) : this(serviceType: descriptor.serviceType);
 
-  /// 从服务类型来创建一个服务标识
+  /// Create a service identity from the service type
   const _ServiceIdentifier.fromType(Type serviceType) : this(serviceType: serviceType);
 }
 
-/// 表示根服务提供器
+/// Represents the root service provider
 final class ServiceProvider implements IServiceProvider, IServiceProviderIsService, IDisposable, IAsyncDisposable {
   bool _disposed = false;
   final List<ServiceDescriptor> _descriptors;
   late final _ServiceProviderScope _rootScope;
 
-  /// 根服务提供器
+  /// Root Service Provider
   ServiceProvider._root(Iterable<ServiceDescriptor> descriptors) : _descriptors = descriptors.toList() {
     _rootScope = _ServiceProviderScope._(rootProvider: this, isRoot: true);
   }
@@ -473,11 +483,12 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
     }
   }
 
-  /// 查找内置服务
+  /// Look for built-in services
   ///
-  /// 返回records类型, [isBuildIn] 指示是否为内置服务，如果为`true`，那么[serviceInstance]有值，否则[isBuildIn]为`false`，[serviceInstance]为`null`
+  /// Returns the records type, [isBuildIn] indicates whether it is a built-in service,
+  /// if it is `true` then [serviceInstance] has a value, otherwise [isBuildIn] is 'false' and [serviceInstance] is 'null'.
   ///
-  /// 注意，如果添加了新的内置服务，那么需要更新这个方法
+  /// Note that if a new built-in service is added, this method will need to be updated.
   (bool isBuildIn, Object? serviceInstance) _fetchBuildInService(Type serviceType, _ServiceProviderScope scope) {
     _throwIfDisposed();
     if (serviceType == IServiceProvider) {
@@ -495,7 +506,7 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
   @override
   bool isService(Type serviceType) {
     var identifier = _ServiceIdentifier.fromType(serviceType);
-    // 注意，如果添加了新的内置服务，那么需要更新这个方法
+    // Note that if a new built-in service is added, this method will need to be updated.
     return serviceType == IServiceProvider ||
         serviceType == IServiceProviderIsService ||
         serviceType == IServiceScopeFactory ||
@@ -503,11 +514,11 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
   }
 }
 
-/// 服务集合默认实现
+/// The default implementation of a collection of services.
 class ServiceCollection extends ListBase<ServiceDescriptor> implements IServiceCollection {
   final List<ServiceDescriptor> _l = [];
 
-  /// 服务集合默认实现
+  /// The default implementation of a collection of services.
   ServiceCollection();
 
   @override
@@ -537,23 +548,23 @@ class ServiceCollection extends ListBase<ServiceDescriptor> implements IServiceC
   }
 }
 
-/// 服务描述器的装饰器
+/// Decorator for the service descriptor
 ///
-/// 接收一个用于装饰的服务描述器[descriptor]，并返回在[descriptor]基础上进行装饰修改过的新的服务描述器
+/// Receives a service [descriptor] for decoration and returns a new service [descriptor] modified for decoration.
 typedef Decorator = ServiceDescriptor Function(ServiceDescriptor descriptor);
 
-/// 定义构建[ServiceProvider]和用于注册服务的扩展方法
+/// Define the build [ServiceProvider] and the extension method used to register the service
 extension ServiceCollectionExtensions on IServiceCollection {
-  /// 构建服务提供器
+  /// Build a service provider
   ServiceProvider buildServiceProvider() {
     return ServiceProvider._root(this);
   }
 
-  /// 使用[instance]实例来添加一个单例服务
+  /// Use the [instance] instance to add a singleton service.
   void addSingletonInstance<TService, TImplementation extends TService>(TImplementation instance) =>
       add(ServiceDescriptor<TService, TImplementation>.instance(serviceInstance: instance));
 
-  /// 尝试使用[instance]实例来添加一个单例服务，如果[TService]已经注册，则不会添加
+  /// Try to add a singleton service using an instance of [instance], if [TService] is already registered, it won't be added.
   void tryAddSingletonInstance<TService, TImplementation extends TService>(TImplementation instance) {
     if (_serviceExists(TService)) {
       return;
@@ -561,11 +572,11 @@ extension ServiceCollectionExtensions on IServiceCollection {
     addSingletonInstance<TService, TImplementation>(instance);
   }
 
-  /// 使用[factory]服务工厂来添加一个单例服务
+  /// Use the [factory] service factory to add a singleton service.
   void addSingleton<TService, TImplementation extends TService>(ServiceFactory<TImplementation> factory) =>
       add(ServiceDescriptor<TService, TImplementation>.singleton(factory: factory));
 
-  /// 尝试使用[factory]服务工厂来添加一个单例服务，如果[TService]已经注册，则不会添加
+  /// Try to add a singleton service using the [factory] service factory, if [TService] is already registered, it won't be added.
   void tryAddSingleton<TService, TImplementation extends TService>(ServiceFactory<TImplementation> factory) {
     if (_serviceExists(TService)) {
       return;
@@ -573,11 +584,11 @@ extension ServiceCollectionExtensions on IServiceCollection {
     addSingleton<TService, TImplementation>(factory);
   }
 
-  /// 使用[factory]服务工厂来添加一个作用域服务
+  /// Use [factory] to add a scoped service.
   void addScoped<TService, TImplementation extends TService>(ServiceFactory<TImplementation> factory) =>
       add(ServiceDescriptor<TService, TImplementation>.scoped(factory: factory));
 
-  /// 尝试使用[factory]服务工厂来添加一个作用域服务，如果[TService]已经注册，则不会添加
+  /// Try to add a scoped service using the [factory] service factory, if [TService] is already registered, it won't be added.
   void tryAddScoped<TService, TImplementation extends TService>(ServiceFactory<TImplementation> factory) {
     if (_serviceExists(TService)) {
       return;
@@ -585,11 +596,11 @@ extension ServiceCollectionExtensions on IServiceCollection {
     addScoped<TService, TImplementation>(factory);
   }
 
-  /// 使用[factory]服务工厂来添加一个瞬时服务
+  /// Use [factory] to add a transient service.
   void addTransient<TService, TImplementation extends TService>(ServiceFactory<TImplementation> factory) =>
       add(ServiceDescriptor<TService, TImplementation>.transient(factory: factory));
 
-  /// 尝试使用[factory]服务工厂来添加一个瞬时服务，如果[TService]已经注册，则不会添加
+  /// Try to add a transient service using the [factory] service factory, which won't be added if [TService] is already registered.
   void tryAddTransient<TService, TImplementation extends TService>(ServiceFactory<TImplementation> factory) {
     if (_serviceExists(TService)) {
       return;
@@ -597,16 +608,16 @@ extension ServiceCollectionExtensions on IServiceCollection {
     addTransient<TService, TImplementation>(factory);
   }
 
-  /// 检测[serviceType]=服务类型是否已经注册。
+  /// Check whether the [serviceType] service type has been registered.
   bool _serviceExists(Type serviceType) => any((e) => e.serviceType == serviceType);
 }
 
-/// 定义用于添加可枚举服务的扩展方法
+/// Define an extension method for adding enumerable services
 extension EnumerableServiceCollectionExtensions on IServiceCollection {
-  /// 尝试添加可枚举的服务
+  /// Try adding enumerable services
   ///
-  /// 如果[TService]没有被注册，那么将会添加[descriptor];
-  /// 如果[TService]已经注册，但是不存在[TImplementation]的实现，那么将会添加[descriptor]。
+  /// If [TService] is not registered, [descriptor] will be added;
+  /// If [TService] is already registered, but no implementation of [TImplementation] exists, then a [descriptor] will be added.
   void tryAddEnumerable<TService, TImplementation extends TService>(
       ServiceDescriptor<TService, TImplementation> descriptor) {
     if (_serviceImplementationExists(descriptor)) {
@@ -615,17 +626,18 @@ extension EnumerableServiceCollectionExtensions on IServiceCollection {
     add(descriptor);
   }
 
-  /// 检测[descriptor]表示的服务类型和服务实现的描述器是否已经添加
+  /// Checks whether the [descriptor] for the service type and service implementation has been added.
   bool _serviceImplementationExists(ServiceDescriptor descriptor) {
     return any((e) => e.serviceType == descriptor.serviceType && e.implementationType == descriptor.implementationType);
   }
 }
 
-/// 定义用于编辑[IServiceCollection]的扩展方法
+/// Define the extension method for editing [IServiceCollection].
 extension EditableServiceCollectionExtensions on IServiceCollection {
-  /// 将所有[serviceType]类型的服务使用[decorator]重新装饰一次。
+  /// Redecorate all services of type [serviceType] once with [decorator].
   ///
-  /// 该方法可用于修改现有的服务。如果[decorator]更改了描述器的服务类型，则抛出[UnsupportedError]错误。
+  /// This method can be used to modify an existing service.
+  /// If [decorator] changes the service type of the descriptor, a [UnsupportedError] error is thrown.
   void decorate(Type serviceType, Decorator decorator) {
     for (final d in this) {
       if (d.serviceType != serviceType) {
@@ -640,12 +652,13 @@ extension EditableServiceCollectionExtensions on IServiceCollection {
     }
   }
 
-  /// 替换第一个服务类型为[serviceType]的描述器
+  /// Replace the first descriptor with the service type [serviceType].
   ///
-  /// 如果[serviceType]已经注册，那么第一个匹配服务类型的描述器将会被删除，然后添加[descriptor];
-  /// 如果[serviceType]没有被注册，将直接添加[descriptor]。
+  /// If [serviceType] is already registered, then the first descriptor
+  /// that matches the service type will be removed and [descriptor] will be added;
+  /// If [serviceType] is not registered, [descriptor] will be added directly.
   ///
-  /// 如果[descriptor]的服务类型与[serviceType]类型不同，则抛出[UnsupportedError]错误。
+  /// If the service type of [descriptor] is different from the [serviceType] type, a [UnsupportedError] error is thrown.
   void replace(Type serviceType, ServiceDescriptor descriptor) {
     if (descriptor.serviceType != serviceType) {
       throw UnsupportedError("The service type can not be changed.");
@@ -657,19 +670,19 @@ extension EditableServiceCollectionExtensions on IServiceCollection {
     add(descriptor);
   }
 
-  /// 替换第一个服务类型为[serviceType]的描述器，本方法确保[descriptor]类型安全
+  /// Replace the descriptor with the first service type [serviceType], this method is type safe.
   void replaceService<TService, TImplementation extends TService>(
       ServiceDescriptor<TService, TImplementation> descriptor) {
     replace(TService, descriptor);
   }
 }
 
-/// [IServiceProvider]扩展，提供服务获取和作用域创建的方法
+/// [IServiceProvider] extension to provide methods for service acquisition and scope creation
 extension ServiceProviderExtensions on IServiceProvider {
-  /// 获取可选的[TService]服务
+  /// Get the optional [TService] service.
   TService? getTypedService<TService>() => getService(TService) as TService?;
 
-  /// 获取必须的[TService]服务，如果[TService]服务不存在，则会抛出[ServiceNotFoundError]
+  /// Get the required [TService] service, if the [TService] service does not exist, [ServiceNotFoundError] will be thrown.
   TService getRequiredService<TService>() {
     var instance = getTypedService<TService>();
     if (instance == null) {
@@ -678,13 +691,13 @@ extension ServiceProviderExtensions on IServiceProvider {
     return instance as TService;
   }
 
-  /// 获取可选的[TService]服务枚举
+  /// Get the optional [TService] service enumeration
   Iterable<TService> getTypedServices<TService>() {
     final list = getServices(TService);
     return list.cast<TService>();
   }
 
-  /// 获取可选的[TService]服务枚举，如果不存在任何的[TService]服务，则会抛出[ServiceNotFoundError]
+  /// Get an optional [TService] service enumeration, if no [TService] services exist, a [ServiceNotFoundError] will be thrown.
   Iterable<TService> getRequiredServices<TService>() {
     final list = getTypedServices<TService>();
     if (list.isEmpty) {
@@ -693,7 +706,7 @@ extension ServiceProviderExtensions on IServiceProvider {
     return list;
   }
 
-  /// 创建一个服务作用域
+  /// Create a service scope.
   IServiceScope createScope() {
     return getRequiredService<IServiceScopeFactory>().createScope();
   }
