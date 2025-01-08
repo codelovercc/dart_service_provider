@@ -195,7 +195,3 @@ or [send an email](mailto:codelovercc@gmail.com) to me.
 ### Flutter
 
 In flutter, you can use [flutter_service_provider](https://pub.dev/packages/flutter_service_provider).
-
-## Todo
-
-Use annotations and code generator to support real Dependency inject.
