@@ -448,7 +448,7 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
   late final _ServiceProviderScope _rootScope;
 
   /// Root Service Provider
-  ServiceProvider._root(Iterable<ServiceDescriptor> descriptors) : _descriptors = descriptors.toList() {
+  ServiceProvider._root(Iterable<ServiceDescriptor> descriptors) : _descriptors = descriptors.toList(growable: false) {
     _rootScope = _ServiceProviderScope._(rootProvider: this, isRoot: true);
   }
 
@@ -509,7 +509,6 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
     if (_disposed == true) {
       return;
     }
-    _descriptors.clear();
     _rootScope.dispose();
     _disposed = true;
   }
@@ -519,7 +518,6 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
     if (_disposed == true) {
       return;
     }
-    _descriptors.clear();
     await _rootScope.disposeAsync();
     _disposed = true;
   }
