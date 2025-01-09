@@ -266,6 +266,7 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
       (d as IAsyncDisposable).disposeAsync();
     }
     _disposables.clear();
+    _servicesCache.clear();
     if (isRoot && !_rootProvider._disposed) {
       _rootProvider.dispose();
     }
@@ -288,6 +289,7 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
       (d as IDisposable).dispose();
     }
     _disposables.clear();
+    _servicesCache.clear();
     if (isRoot && !_rootProvider._disposed) {
       await _rootProvider.disposeAsync();
     }
