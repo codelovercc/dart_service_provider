@@ -146,7 +146,7 @@ class ServiceDescriptor<TService, TImplementation extends TService> {
 
   /// Use a service instance to create a singleton service descriptor
   ///
-  /// A singleton service that uses an existing instance is not released by the service container, and the caller needs to be released automatically
+  /// A singleton service that uses an existing instance is not released by the service container, and you are responsible for releasing the instance.
   const ServiceDescriptor.instance({required TService this.serviceInstance})
       : serviceType = TService,
         implementationType = TImplementation,
