@@ -328,13 +328,15 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
       case ServiceLifeTime.singleton:
         {
           if (isRoot) {
+            final dynamic instance;
             if (descriptor.serviceInstance != null) {
-              return descriptor.serviceInstance;
+              instance = descriptor.serviceInstance;
+            } else {
+              // The current scope is the root scope
+              instance = descriptor.factory!(this);
+              // A singleton service created by a service container needs to be released by the container
+              _captureDisables(instance);
             }
-            // The current object is the root scope
-            var instance = descriptor.factory!(this);
-            // A singleton service created by a service container needs to be released by the container
-            _captureDisables(instance);
             _servicesCache[descriptor] = instance;
             return instance;
           }
