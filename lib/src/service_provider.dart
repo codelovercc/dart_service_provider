@@ -138,6 +138,24 @@ class ServiceDescriptor<TService, TImplementation extends TService> {
   /// The factory of the service, which will only be `null` if a singleton service descriptor is created using a service instance.
   final ServiceFactory<TImplementation>? factory;
 
+  const ServiceDescriptor._custom(
+    this.serviceType,
+    this.implementationType,
+    this.lifeTime,
+    this.factory,
+    this._configureType,
+    this._postConfigureType,
+  ) : serviceInstance = null;
+
+  const ServiceDescriptor._customInstance(
+    this.serviceType,
+    this.implementationType,
+    this.lifeTime,
+    this.serviceInstance,
+    this._configureType,
+    this._postConfigureType,
+  ) : factory = null;
+
   const ServiceDescriptor._({required this.lifeTime, required this.factory})
       : serviceType = TService,
         implementationType = TImplementation,
@@ -210,6 +228,36 @@ class ServiceDescriptor<TService, TImplementation extends TService> {
       lifeTime.hashCode ^
       serviceInstance.hashCode ^
       factory.hashCode;
+}
+
+/// Provides [ServiceDescriptor] copy method.
+extension CopyServiceDescriptorExtensions on ServiceDescriptor {
+  /// Copy a [ServiceDescriptor] and change the [ServiceDescriptor.factory] to [factory].
+  ServiceDescriptor copyWith({required ServiceFactory factory}) {
+    return ServiceDescriptor._custom(
+      serviceType,
+      implementationType,
+      lifeTime,
+      factory,
+      _configureType,
+      _postConfigureType,
+    );
+  }
+
+  /// Copy a singleton [ServiceDescriptor] and change the [serviceInstance] to [instance].
+  ServiceDescriptor copyWithInstance({required dynamic instance}) {
+    if (lifeTime != ServiceLifeTime.singleton) {
+      throw StateError("The life-time of the Service must be singleton.");
+    }
+    return ServiceDescriptor._customInstance(
+      serviceType,
+      implementationType,
+      lifeTime,
+      instance,
+      _configureType,
+      _postConfigureType,
+    );
+  }
 }
 
 /// The default implementation of [IServiceScope].

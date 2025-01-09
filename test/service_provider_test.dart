@@ -155,6 +155,57 @@ void main() {
       expect(ds.lifeTime, equals(ServiceLifeTime.singleton));
       expect(ds.serviceInstance, isNotNull);
     });
+    test("Decorate a service with copyWith should work", () {
+      services
+        ..addScoped<MyServiceForDecorate2, MyServiceForDecorate2>((p) => MyServiceForDecorate2())
+        ..decorate(
+          MyServiceForDecorate2,
+          (old) => old.copyWith(
+            factory: (p) {
+              return MyServiceForDecorate2()..name = "Decorator";
+            },
+          ),
+        );
+      final p = services.buildServiceProvider();
+      final scope = p.createScope();
+      final s = scope.serviceProvider.getRequiredService<MyServiceForDecorate2>();
+      expect(s.name, equals("Decorator"));
+      scope.dispose();
+      p.dispose();
+    });
+    test("Service descriptor copyWithInstance shoud work", () {
+      services
+        ..addSingletonInstance<MyServiceForDecorate2, MyServiceForDecorate2>(MyServiceForDecorate2())
+        ..decorate(MyServiceForDecorate2, (old) {
+          return old.copyWithInstance(instance: MyServiceForDecorate2()..name = "copied");
+        });
+      final p = services.buildServiceProvider();
+      final s = p.getRequiredService<MyServiceForDecorate2>();
+      expect(s.name, equals("copied"));
+      p.dispose();
+    });
+    test("Service descriptor copyWithInstance on transient service should error", () {
+      final d = ServiceDescriptor<MyServiceForDecorate2, MyServiceForDecorate2>.transient(
+        factory: (p) => MyServiceForDecorate2(),
+      );
+      expect(
+        () => d.copyWithInstance(instance: MyServiceForDecorate2()..name = "copied"),
+        throwsA(
+          isA<StateError>(),
+        ),
+      );
+    });
+    test("Service descriptor copyWithInstance on scoped service should error", () {
+      final d = ServiceDescriptor<MyServiceForDecorate2, MyServiceForDecorate2>.scoped(
+        factory: (p) => MyServiceForDecorate2(),
+      );
+      expect(
+            () => d.copyWithInstance(instance: MyServiceForDecorate2()..name = "copied"),
+        throwsA(
+          isA<StateError>(),
+        ),
+      );
+    });
     test("Singleton service should be disposed when root provider is disposed", () async {
       final p = services.buildServiceProvider();
       final s = p.getRequiredService<IMySingletonService1>();
@@ -425,6 +476,10 @@ class MyInvalidScopedDependencySingletonService {
 
 /// 用于测试[EditableServiceCollectionExtensions.decorate]方法来修改已经添加的服务
 class MyServiceForDecorate {}
+
+class MyServiceForDecorate2 {
+  String name = "john";
+}
 
 class MyScopedAsyncDisposableService implements IAsyncDisposable {
   MyScopedAsyncDisposableService() {
