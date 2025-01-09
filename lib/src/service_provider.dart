@@ -113,7 +113,7 @@ abstract interface class IServiceScopeFactory {
 ///
 /// If the service is [ServiceLifeTime.singleton], then [IServiceProvider] is the root service provider;
 /// If the service is [ServiceLifeTime.scoped], then [IServiceProvider] is the service provider of the corresponding scope;
-/// If the service is [ServiceLifeTime.transient], then [IServiceProvider] is the root service provider.
+/// If the service is [ServiceLifeTime.transient], then [IServiceProvider] is the service provider of the corresponding scope;
 typedef ServiceFactory<T> = T Function(IServiceProvider provider);
 
 /// Service Descriptor
