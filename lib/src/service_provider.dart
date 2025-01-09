@@ -116,6 +116,35 @@ abstract interface class IServiceScopeFactory {
 /// If the service is [ServiceLifeTime.transient], then [IServiceProvider] is the service provider of the corresponding scope;
 typedef ServiceFactory<T> = T Function(IServiceProvider provider);
 
+/// Service configure action
+///
+/// Configure the instance of [TService] when it's creating from the service container.
+///
+/// If the service is [ServiceLifeTime.singleton], then [IServiceProvider] is the root service provider;
+/// If the service is [ServiceLifeTime.scoped], then [IServiceProvider] is the service provider of the corresponding scope;
+/// If the service is [ServiceLifeTime.transient], then [IServiceProvider] is the service provider of the corresponding scope;
+typedef ConfigureAction<TService> = void Function(IServiceProvider p, TService service);
+
+/// Configure the service when it's created.
+///
+/// - [TService] the type of service
+class ServiceConfigure<TService> {
+  final ConfigureAction<dynamic> _config;
+
+  /// - [config] An action that receive two arguments to configure instance of [TService].
+  /// First argument is the [IServiceProvider]; second is the instance of [TService].
+  const ServiceConfigure({required ConfigureAction<dynamic> config}) : _config = config;
+}
+
+/// Configure the service when it's created, but [ServicePostConfigure] runs after all [ServiceConfigure].
+///
+/// - [TService] the type of service
+class ServicePostConfigure<TService> extends ServiceConfigure<TService> {
+  /// - [config] An action that receive two arguments to configure instance of [TService].
+  /// First argument is the [IServiceProvider]; second is the instance of [TService].
+  const ServicePostConfigure({required super.config});
+}
+
 /// Service Descriptor
 ///
 /// - [TService] Type of service
@@ -138,6 +167,10 @@ class ServiceDescriptor<TService, TImplementation extends TService> {
   /// The factory of the service, which will only be `null` if a singleton service descriptor is created using a service instance.
   final ServiceFactory<TImplementation>? factory;
 
+  final Type _configureType;
+
+  final Type _postConfigureType;
+
   const ServiceDescriptor._custom(
     this.serviceType,
     this.implementationType,
@@ -159,6 +192,8 @@ class ServiceDescriptor<TService, TImplementation extends TService> {
   const ServiceDescriptor._({required this.lifeTime, required this.factory})
       : serviceType = TService,
         implementationType = TImplementation,
+        _configureType = ServiceConfigure<TService>,
+        _postConfigureType = ServicePostConfigure<TService>,
         serviceInstance = null,
         assert(TService != Object, "Service type can not be type `Object`.");
 
@@ -168,6 +203,8 @@ class ServiceDescriptor<TService, TImplementation extends TService> {
   const ServiceDescriptor.instance({required TService this.serviceInstance})
       : serviceType = TService,
         implementationType = TImplementation,
+        _configureType = ServiceConfigure<TService>,
+        _postConfigureType = ServicePostConfigure<TService>,
         lifeTime = ServiceLifeTime.singleton,
         factory = null,
         assert(TService != Object, "Service type can not be type `Object`.");
@@ -388,6 +425,7 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
               _captureDisables(instance);
             }
             _servicesCache[descriptor] = instance;
+            _rootProvider._applyConfigures(descriptor, instance, this);
             return instance;
           }
           return _rootProvider._getService(descriptor, _rootProvider._rootScope);
@@ -401,11 +439,13 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
           // A scoped service created by a service container needs to be released by the container
           _captureDisables(instance);
           _servicesCache[descriptor] = instance;
+          _rootProvider._applyConfigures(descriptor, instance, this);
           return instance;
         }
       case ServiceLifeTime.transient:
         {
           final instance = descriptor.factory!(this);
+          _rootProvider._applyConfigures(descriptor, instance, this);
           return instance;
         }
     }
@@ -448,6 +488,16 @@ class _ServiceIdentifier {
 final class ServiceProvider implements IServiceProvider, IServiceProviderIsService, IDisposable, IAsyncDisposable {
   bool _disposed = false;
   final List<ServiceDescriptor> _descriptors;
+
+  /// Cache descriptors of [ServiceConfigure] for services.
+  ///
+  /// Key is the type of the service, value is descriptors of [ServiceConfigure] for the service.
+  final Map<Type, Iterable<ServiceDescriptor>> _configures = {};
+
+  /// Cache descriptors of [ServicePostConfigure] for services.
+  ///
+  /// Key is the type of the service, value is descriptors of [ServicePostConfigure] for the service.
+  final Map<Type, Iterable<ServiceDescriptor>> _postConfigures = {};
   late final _ServiceProviderScope _rootScope;
 
   /// Root Service Provider
@@ -495,16 +545,45 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
     return _getServices(ds, scope);
   }
 
-  Object _getService(ServiceDescriptor descriptor, _ServiceProviderScope scope) {
+  Object _getService(ServiceDescriptor d, _ServiceProviderScope scope) {
     _throwIfDisposed();
-    return scope._getOrAdd(descriptor);
+    return scope._getOrAdd(d);
   }
 
-  Iterable<Object> _getServices(Iterable<ServiceDescriptor> descriptors, _ServiceProviderScope scope) sync* {
+  Iterable<Object> _getServices(Iterable<ServiceDescriptor> ds, _ServiceProviderScope scope) sync* {
     _throwIfDisposed();
-    for (final d in descriptors) {
+    for (final d in ds) {
       yield scope._getOrAdd(d);
     }
+  }
+
+  void _applyConfigures(ServiceDescriptor d, Object s, _ServiceProviderScope scope) {
+    final configures = _getServices(_getConfigureDescriptors(d), scope).cast<ServiceConfigure>();
+    final postConfigures = _getServices(_getPostConfigureDescriptors(d), scope).cast<ServicePostConfigure>();
+    for (final c in configures) {
+      c._config(scope, s);
+    }
+    for (final c in postConfigures) {
+      c._config(scope, s);
+    }
+  }
+
+  Iterable<ServiceDescriptor> _getConfigureDescriptors(ServiceDescriptor service) {
+    var ds = _configures[service.serviceType];
+    if (ds != null) {
+      return ds;
+    }
+    ds = _descriptors.where((d) => d.serviceType == service._configureType);
+    return _configures[service.serviceType] = ds.isEmpty ? const <ServiceDescriptor>[] : ds.toList(growable: false);
+  }
+
+  Iterable<ServiceDescriptor> _getPostConfigureDescriptors(ServiceDescriptor service) {
+    var ds = _postConfigures[service.serviceType];
+    if (ds != null) {
+      return ds;
+    }
+    ds = _descriptors.where((d) => d.serviceType == service._postConfigureType);
+    return _postConfigures[service.serviceType] = ds.isEmpty ? const <ServiceDescriptor>[] : ds.toList(growable: false);
   }
 
   @override
@@ -512,6 +591,8 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
     if (_disposed == true) {
       return;
     }
+    _configures.clear();
+    _postConfigures.clear();
     _rootScope.dispose();
     _disposed = true;
   }
@@ -521,6 +602,8 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
     if (_disposed == true) {
       return;
     }
+    _configures.clear();
+    _postConfigures.clear();
     await _rootScope.disposeAsync();
     _disposed = true;
   }
@@ -727,6 +810,33 @@ extension EditableServiceCollectionExtensions on IServiceCollection {
   void replaceService<TService, TImplementation extends TService>(
       ServiceDescriptor<TService, TImplementation> descriptor) {
     replace(TService, descriptor);
+  }
+}
+
+/// Provides extension methods for configuration of service instances.
+extension ConfigureServiceCollectionExtensions on IServiceCollection {
+  /// Configure [TService] when it's created.
+  ///
+  /// - [config] An action that receive two arguments to configure instance of [TService].
+  /// First argument is the [IServiceProvider]; second is the instance of [TService].
+  void configure<TService>(ConfigureAction<TService> config) {
+    addTransient<ServiceConfigure<TService>, ServiceConfigure<TService>>(
+      (p) => ServiceConfigure(
+        config: (p, s) => config(p, s),
+      ),
+    );
+  }
+
+  /// Post configure [TService] when it's created. These configures run after all [ServiceConfigure].
+  ///
+  /// - [config] An action that receive two arguments to configure instance of [TService].
+  /// First argument is the [IServiceProvider]; second is the instance of [TService].
+  void postConfigure<TService>(ConfigureAction<TService> config) {
+    addTransient<ServicePostConfigure<TService>, ServicePostConfigure<TService>>(
+      (p) => ServicePostConfigure(
+        config: (p, s) => config(p, s),
+      ),
+    );
   }
 }
 

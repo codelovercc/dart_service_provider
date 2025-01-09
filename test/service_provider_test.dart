@@ -200,7 +200,7 @@ void main() {
         factory: (p) => MyServiceForDecorate2(),
       );
       expect(
-            () => d.copyWithInstance(instance: MyServiceForDecorate2()..name = "copied"),
+        () => d.copyWithInstance(instance: MyServiceForDecorate2()..name = "copied"),
         throwsA(
           isA<StateError>(),
         ),
@@ -318,7 +318,88 @@ void main() {
       l1.info("Log message test for $MyScopedService.");
       scope.dispose();
     });
+    group("ServiceConfigure tests", () {
+      test("Configure singleton instance", () {
+        services
+            .addSingletonInstance<MyServiceForConfigureTest, MyServiceForConfigureTest>(MyServiceForConfigureTest());
+        services.configure<MyServiceForConfigureTest>((p, s) => s.msg = "Configure1");
+        services.configure<MyServiceForConfigureTest>((p, s) => s.msg = "Configure2");
+        services.postConfigure<MyServiceForConfigureTest>((p, s) => s.msg = "PostConfigure1");
+        services.postConfigure<MyServiceForConfigureTest>((p, s) => s.msg = "PostConfigure2");
+        final p = services.buildServiceProvider();
+        final s = p.getRequiredService<MyServiceForConfigureTest>();
+        // configures only run after creating.
+        p.getRequiredService<MyServiceForConfigureTest>();
+        expect(s.msg, equals("PostConfigure2"));
+        expect(s.configureCount, equals(4));
+        p.dispose();
+      });
+
+      test("Configure singleton factory", () {
+        services.addSingleton<MyServiceForConfigureTest, MyServiceForConfigureTest>((p) => MyServiceForConfigureTest());
+        services.configure<MyServiceForConfigureTest>((p, s) => s.msg = "Configure1");
+        services.configure<MyServiceForConfigureTest>((p, s) => s.msg = "Configure2");
+        services.postConfigure<MyServiceForConfigureTest>((p, s) => s.msg = "PostConfigure1");
+        services.postConfigure<MyServiceForConfigureTest>((p, s) => s.msg = "PostConfigure2");
+        final p = services.buildServiceProvider();
+        final s = p.getRequiredService<MyServiceForConfigureTest>();
+        // configures only run after creating.
+        p.getRequiredService<MyServiceForConfigureTest>();
+        expect(s.msg, equals("PostConfigure2"));
+        expect(s.configureCount, equals(4));
+        p.dispose();
+      });
+
+      test("Configure scoped service", () {
+        services.addScoped<MyServiceForConfigureTest, MyServiceForConfigureTest>((p) => MyServiceForConfigureTest());
+        services.configure<MyServiceForConfigureTest>((p, s) => s.msg = "Configure1");
+        services.configure<MyServiceForConfigureTest>((p, s) => s.msg = "Configure2");
+        services.postConfigure<MyServiceForConfigureTest>((p, s) => s.msg = "PostConfigure1");
+        services.postConfigure<MyServiceForConfigureTest>((p, s) => s.msg = "PostConfigure2");
+        final p = services.buildServiceProvider();
+        final scope = p.createScope();
+        final s = scope.serviceProvider.getRequiredService<MyServiceForConfigureTest>();
+        // configures only run after creating.
+        scope.serviceProvider.getRequiredService<MyServiceForConfigureTest>();
+        expect(s.msg, equals("PostConfigure2"));
+        expect(s.configureCount, equals(4));
+        scope.dispose();
+        p.dispose();
+      });
+
+      test("Configure transient service", () {
+        services.addTransient<MyServiceForConfigureTest, MyServiceForConfigureTest>((p) => MyServiceForConfigureTest());
+        services.configure<MyServiceForConfigureTest>((p, s) => s.msg = "Configure1");
+        services.configure<MyServiceForConfigureTest>((p, s) => s.msg = "Configure2");
+        services.postConfigure<MyServiceForConfigureTest>((p, s) => s.msg = "PostConfigure1");
+        services.postConfigure<MyServiceForConfigureTest>((p, s) => s.msg = "PostConfigure2");
+        final p = services.buildServiceProvider();
+        final scope = p.createScope();
+        final s = scope.serviceProvider.getRequiredService<MyServiceForConfigureTest>();
+        expect(s.msg, equals("PostConfigure2"));
+        expect(s.configureCount, equals(4));
+        // configures only run after creating.
+        final s1 = scope.serviceProvider.getRequiredService<MyServiceForConfigureTest>();
+        expect(s1.msg, equals("PostConfigure2"));
+        expect(s1.configureCount, equals(4));
+        scope.dispose();
+        p.dispose();
+      });
+    });
   });
+}
+
+class MyServiceForConfigureTest {
+  String _msg = "Init";
+
+  String get msg => _msg;
+
+  set msg(String value) {
+    _msg = value;
+    configureCount++;
+  }
+
+  int configureCount = 0;
 }
 
 abstract interface class IMySingletonService implements IDisposable {}
