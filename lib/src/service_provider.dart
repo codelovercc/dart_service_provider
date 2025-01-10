@@ -303,7 +303,7 @@ extension CopyServiceDescriptorExtensions on ServiceDescriptor {
 /// The default implementation of [IServiceScope].
 class _ServiceProviderScope implements IServiceScope, IServiceProvider, IServiceScopeFactory {
   bool _disposed = false;
-  final List<Object> _disposables = [];
+  List<Object> _disposables = [];
   ILogger4<IServiceProvider>? _logger;
 
   /// Whether it is root scoped
@@ -317,7 +317,7 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
   /// and the root scope caches only the singleton services created by it;
   /// Otherwise, cache the currently scoped service;
   /// Transient services are never cached, and their lifecycle is the responsibility of the consumer.
-  final Map<ServiceDescriptor, Object> _servicesCache = {};
+  Map<ServiceDescriptor, Object> _servicesCache = {};
 
   /// Root Service Provider
   final ServiceProvider _rootProvider;
@@ -353,8 +353,9 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
       // That is, the dart VM waits for the end of these asynchronous tasks that are not waited for by the user code before exiting the application.
       (d as IAsyncDisposable).disposeAsync();
     }
-    _disposables.clear();
-    _servicesCache.clear();
+    _disposables = const [];
+    _servicesCache = const {};
+    _logger = null;
     if (isRoot && !_rootProvider._disposed) {
       _rootProvider.dispose();
     }
@@ -376,8 +377,9 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
       }
       (d as IDisposable).dispose();
     }
-    _disposables.clear();
-    _servicesCache.clear();
+    _disposables = const [];
+    _servicesCache = const {};
+    _logger = null;
     if (isRoot && !_rootProvider._disposed) {
       await _rootProvider.disposeAsync();
     }
@@ -490,17 +492,17 @@ class _ServiceIdentifier {
 /// Represents the root service provider
 final class ServiceProvider implements IServiceProvider, IServiceProviderIsService, IDisposable, IAsyncDisposable {
   bool _disposed = false;
-  final List<ServiceDescriptor> _descriptors;
+  List<ServiceDescriptor> _descriptors;
 
   /// Cache descriptors of [ServiceConfigure] for services.
   ///
   /// Key is the type of the service, value is descriptors of [ServiceConfigure] for the service.
-  final Map<Type, Iterable<ServiceDescriptor>> _configures = {};
+  Map<Type, Iterable<ServiceDescriptor>> _configures = {};
 
   /// Cache descriptors of [ServicePostConfigure] for services.
   ///
   /// Key is the type of the service, value is descriptors of [ServicePostConfigure] for the service.
-  final Map<Type, Iterable<ServiceDescriptor>> _postConfigures = {};
+  Map<Type, Iterable<ServiceDescriptor>> _postConfigures = {};
   late final _ServiceProviderScope _rootScope;
 
   /// Root Service Provider
@@ -564,6 +566,7 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
     if (s is! IConfigurable) {
       return;
     }
+    _throwIfDisposed();
     _rootScope._logger?.debug("Configuring the instance ${s.hashCode} of ${d.serviceType} service");
     final configures = _getServices(_getConfigureDescriptors(d), scope).cast<ServiceConfigure>();
     final postConfigures = _getServices(_getPostConfigureDescriptors(d), scope).cast<ServicePostConfigure>();
@@ -600,8 +603,9 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
     if (_disposed == true) {
       return;
     }
-    _configures.clear();
-    _postConfigures.clear();
+    _configures = const {};
+    _postConfigures = const {};
+    _descriptors = const [];
     _rootScope.dispose();
     _disposed = true;
   }
@@ -611,8 +615,9 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
     if (_disposed == true) {
       return;
     }
-    _configures.clear();
-    _postConfigures.clear();
+    _configures = const {};
+    _postConfigures = const {};
+    _descriptors = const [];
     await _rootScope.disposeAsync();
     _disposed = true;
   }
