@@ -389,7 +389,7 @@ void main() {
   });
 }
 
-class MyServiceForConfigureTest {
+class MyServiceForConfigureTest implements IConfigurable {
   String _msg = "Init";
 
   String get msg => _msg;

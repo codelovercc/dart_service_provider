@@ -116,6 +116,9 @@ abstract interface class IServiceScopeFactory {
 /// If the service is [ServiceLifeTime.transient], then [IServiceProvider] is the service provider of the corresponding scope;
 typedef ServiceFactory<T> = T Function(IServiceProvider provider);
 
+/// Indicates that instances of this service can be configured by [ServiceConfigure] and [ServicePostConfigure].
+abstract interface class IConfigurable {}
+
 /// Service configure action
 ///
 /// Configure the instance of [TService] when it's creating from the service container.
@@ -558,6 +561,10 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
   }
 
   void _applyConfigures(ServiceDescriptor d, Object s, _ServiceProviderScope scope) {
+    if (s is! IConfigurable) {
+      return;
+    }
+    _rootScope._logger?.debug("Configuring the instance ${s.hashCode} of ${d.serviceType} service");
     final configures = _getServices(_getConfigureDescriptors(d), scope).cast<ServiceConfigure>();
     final postConfigures = _getServices(_getPostConfigureDescriptors(d), scope).cast<ServicePostConfigure>();
     for (final c in configures) {
