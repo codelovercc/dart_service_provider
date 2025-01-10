@@ -397,8 +397,7 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
         }
       case ServiceLifeTime.transient:
         {
-          final instance = descriptor.factory!(this);
-          return instance;
+          return descriptor.factory!(this);
         }
     }
   }
