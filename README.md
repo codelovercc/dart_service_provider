@@ -186,6 +186,17 @@ void main() {
 
 You can detect the environment and change the application behavior at runtime.
 
+## Service configuration
+
+After any service that implements `IConfigurable` is created from the service container (including
+singleton services that specify instances), the service container will look for its corresponding
+`ServiceConfigure<TService>` and `ServicePostConfigure<TService>` services to configure these
+service instances.
+
+Use the `serviceCollection.configure<TService>` method or the
+`serviceCollection.postConfigure<TService>` method to add a configuration service for a configurable
+service.
+
 ## Additional information
 
 If you have any issues or suggests please redirect
@@ -194,4 +205,5 @@ or [send an email](mailto:codelovercc@gmail.com) to me.
 
 ### Flutter
 
-In flutter, you can use [flutter_service_provider](https://pub.dev/packages/flutter_service_provider).
+In flutter, you can
+use [flutter_service_provider](https://pub.dev/packages/flutter_service_provider).
