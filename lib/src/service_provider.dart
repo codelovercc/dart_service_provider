@@ -573,7 +573,8 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
     if (ds != null) {
       return ds;
     }
-    ds = _descriptors.where((d) => d.serviceType == service._configureType);
+    final configureType = service._configureType;
+    ds = _descriptors.where((d) => d.serviceType == configureType);
     return _configures[service.serviceType] = ds.isEmpty ? const <ServiceDescriptor>[] : ds.toList(growable: false);
   }
 
@@ -582,7 +583,8 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
     if (ds != null) {
       return ds;
     }
-    ds = _descriptors.where((d) => d.serviceType == service._postConfigureType);
+    final postConfigureType = service._postConfigureType;
+    ds = _descriptors.where((d) => d.serviceType == postConfigureType);
     return _postConfigures[service.serviceType] = ds.isEmpty ? const <ServiceDescriptor>[] : ds.toList(growable: false);
   }
 
