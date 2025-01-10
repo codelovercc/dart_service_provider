@@ -1,3 +1,7 @@
+## 1.2.0
+
+- Support service instances configure
+
 ## 1.1.2
 
 - Pass the service provider of the corresponding scope to the service factory while creating a
