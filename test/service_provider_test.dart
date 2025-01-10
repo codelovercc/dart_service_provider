@@ -200,7 +200,7 @@ void main() {
         factory: (p) => MyServiceForDecorate2(),
       );
       expect(
-            () => d.copyWithInstance(instance: MyServiceForDecorate2()..name = "copied"),
+        () => d.copyWithInstance(instance: MyServiceForDecorate2()..name = "copied"),
         throwsA(
           isA<StateError>(),
         ),
