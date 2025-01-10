@@ -143,8 +143,6 @@ class ServiceDescriptor<TService, TImplementation extends TService> {
     this.implementationType,
     this.lifeTime,
     this.factory,
-    this._configureType,
-    this._postConfigureType,
   ) : serviceInstance = null;
 
   const ServiceDescriptor._customInstance(
@@ -152,8 +150,6 @@ class ServiceDescriptor<TService, TImplementation extends TService> {
     this.implementationType,
     this.lifeTime,
     this.serviceInstance,
-    this._configureType,
-    this._postConfigureType,
   ) : factory = null;
 
   const ServiceDescriptor._({required this.lifeTime, required this.factory})
@@ -239,8 +235,6 @@ extension CopyServiceDescriptorExtensions on ServiceDescriptor {
       implementationType,
       lifeTime,
       factory,
-      _configureType,
-      _postConfigureType,
     );
   }
 
@@ -254,8 +248,6 @@ extension CopyServiceDescriptorExtensions on ServiceDescriptor {
       implementationType,
       lifeTime,
       instance,
-      _configureType,
-      _postConfigureType,
     );
   }
 }
