@@ -828,7 +828,7 @@ extension ConfigureServiceCollectionExtensions on IServiceCollection {
   ///
   /// - [config] An action that receive two arguments to configure instance of [TService].
   /// First argument is the [IServiceProvider]; second is the instance of [TService].
-  void configure<TService>(ConfigureAction<TService> config) {
+  void configure<TService extends IConfigurable>(ConfigureAction<TService> config) {
     addTransient<ServiceConfigure<TService>, ServiceConfigure<TService>>(
       (p) => ServiceConfigure(
         config: (p, s) => config(p, s),
@@ -840,7 +840,7 @@ extension ConfigureServiceCollectionExtensions on IServiceCollection {
   ///
   /// - [config] An action that receive two arguments to configure instance of [TService].
   /// First argument is the [IServiceProvider]; second is the instance of [TService].
-  void postConfigure<TService>(ConfigureAction<TService> config) {
+  void postConfigure<TService extends IConfigurable>(ConfigureAction<TService> config) {
     addTransient<ServicePostConfigure<TService>, ServicePostConfigure<TService>>(
       (p) => ServicePostConfigure(
         config: (p, s) => config(p, s),
