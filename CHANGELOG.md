@@ -1,3 +1,11 @@
+## 1.1.2
+
+- Pass the service provider of the corresponding scope to the service factory while creating a
+  transient service.
+- Support copy `ServiceDescriptor` with new factory or instance.
+- Code optimization
+- Document update
+
 ## 1.1.1
 
 - Update dartdoc.
