@@ -412,8 +412,11 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
 
   Object _getOrAdd(ServiceDescriptor descriptor) {
     _throwIfDisposed();
-    if (_servicesCache.containsKey(descriptor)) {
-      return _servicesCache[descriptor]!;
+    {
+      final instance = _servicesCache[descriptor];
+      if (instance != null) {
+        return instance;
+      }
     }
     _logger?.debug("Creating, $descriptor");
     switch (descriptor.lifeTime) {
