@@ -496,16 +496,6 @@ class _ServiceIdentifier {
 final class ServiceProvider implements IServiceProvider, IServiceProviderIsService, IDisposable, IAsyncDisposable {
   bool _disposed = false;
   List<ServiceDescriptor> _descriptors;
-
-  /// Cache descriptors of [ServiceConfigure] for services.
-  ///
-  /// Key is the type of the service, value is descriptors of [ServiceConfigure] for the service.
-  Map<Type, Iterable<ServiceDescriptor>> _configures = {};
-
-  /// Cache descriptors of [ServicePostConfigure] for services.
-  ///
-  /// Key is the type of the service, value is descriptors of [ServicePostConfigure] for the service.
-  Map<Type, Iterable<ServiceDescriptor>> _postConfigures = {};
   late final _ServiceProviderScope _rootScope;
 
   /// Root Service Provider
@@ -582,23 +572,13 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
   }
 
   Iterable<ServiceDescriptor> _getConfigureDescriptors(ServiceDescriptor service) {
-    var ds = _configures[service.serviceType];
-    if (ds != null) {
-      return ds;
-    }
     final configureType = service._configureType;
-    ds = _descriptors.where((d) => d.serviceType == configureType);
-    return _configures[service.serviceType] = ds.isEmpty ? const <ServiceDescriptor>[] : ds.toList(growable: false);
+    return _descriptors.where((d) => d.serviceType == configureType);
   }
 
   Iterable<ServiceDescriptor> _getPostConfigureDescriptors(ServiceDescriptor service) {
-    var ds = _postConfigures[service.serviceType];
-    if (ds != null) {
-      return ds;
-    }
     final postConfigureType = service._postConfigureType;
-    ds = _descriptors.where((d) => d.serviceType == postConfigureType);
-    return _postConfigures[service.serviceType] = ds.isEmpty ? const <ServiceDescriptor>[] : ds.toList(growable: false);
+    return _descriptors.where((d) => d.serviceType == postConfigureType);
   }
 
   @override
@@ -606,8 +586,6 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
     if (_disposed == true) {
       return;
     }
-    _configures = const {};
-    _postConfigures = const {};
     _descriptors = const [];
     _rootScope.dispose();
     _disposed = true;
@@ -618,8 +596,6 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
     if (_disposed == true) {
       return;
     }
-    _configures = const {};
-    _postConfigures = const {};
     _descriptors = const [];
     await _rootScope.disposeAsync();
     _disposed = true;
