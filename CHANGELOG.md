@@ -1,3 +1,7 @@
+## 1.2.1
+
+- Clean up code
+
 ## 1.2.0
 
 - Support service instances configure
