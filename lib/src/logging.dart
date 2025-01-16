@@ -25,7 +25,7 @@ final class LoggingBuilder {
   const LoggingBuilder({required this.services});
 }
 
-/// 支持从服务容器中解析日志服务
+/// Provide logging service configuration methods
 extension LoggingServiceCollectionExtension on IServiceCollection {
   /// Add default logging services
   ///
