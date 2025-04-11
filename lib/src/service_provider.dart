@@ -413,12 +413,12 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
   Object _getOrAdd(ServiceDescriptor descriptor) {
     _throwIfDisposed();
     {
+      _logger?.debug("Fetching, $descriptor");
       final instance = _servicesCache[descriptor];
       if (instance != null) {
         return instance;
       }
     }
-    _logger?.debug("Creating, $descriptor");
     switch (descriptor.lifeTime) {
       case ServiceLifeTime.singleton:
         {
@@ -428,6 +428,7 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
               instance = descriptor.serviceInstance;
             } else {
               // The current scope is the root scope
+              _logger?.debug("Creating, $descriptor");
               instance = descriptor.factory!(this);
               // A singleton service created by a service container needs to be released by the container
               _captureDisables(instance);
@@ -443,6 +444,7 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
           if (isRoot) {
             throw InvalidScopeError("Scoped service can not provide by root.");
           }
+          _logger?.debug("Creating, $descriptor");
           var instance = descriptor.factory!(this);
           // A scoped service created by a service container needs to be released by the container
           _captureDisables(instance);
@@ -452,6 +454,7 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
         }
       case ServiceLifeTime.transient:
         {
+          _logger?.debug("Creating, $descriptor");
           final instance = descriptor.factory!(this);
           _rootProvider._applyConfigures(descriptor, instance, this);
           return instance;
