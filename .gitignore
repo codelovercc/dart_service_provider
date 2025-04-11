@@ -631,3 +631,4 @@ doc/api/
 .flutter-plugins
 .flutter-plugins-dependencies
 
+/.idea/dart_service_provider.iml
