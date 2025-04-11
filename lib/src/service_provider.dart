@@ -472,29 +472,6 @@ class _ServiceProviderScope implements IServiceScope, IServiceProvider, IService
   IServiceScope createScope() => _rootProvider._createScope();
 }
 
-/// Service Identifier
-///
-/// The implementation currently identifies a service by its service type
-class _ServiceIdentifier {
-  final Type serviceType;
-
-  const _ServiceIdentifier({required this.serviceType});
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is _ServiceIdentifier && runtimeType == other.runtimeType && serviceType == other.serviceType;
-
-  @override
-  int get hashCode => serviceType.hashCode;
-
-  /// Create a service identity from the service descriptor
-  _ServiceIdentifier.fromDescriptor(ServiceDescriptor descriptor) : this(serviceType: descriptor.serviceType);
-
-  /// Create a service identity from the service type
-  const _ServiceIdentifier.fromType(Type serviceType) : this(serviceType: serviceType);
-}
-
 /// Represents the root service provider
 final class ServiceProvider implements IServiceProvider, IServiceProviderIsService, IDisposable, IAsyncDisposable {
   bool _disposed = false;
@@ -508,8 +485,7 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
 
   Iterable<ServiceDescriptor> _findDescriptors(Type serviceType) {
     _throwIfDisposed();
-    final identifier = _ServiceIdentifier.fromType(serviceType);
-    return _descriptors.where((e) => identifier == _ServiceIdentifier.fromDescriptor(e));
+    return _descriptors.where((e) => e.serviceType == serviceType);
   }
 
   @override
@@ -637,12 +613,11 @@ final class ServiceProvider implements IServiceProvider, IServiceProviderIsServi
 
   @override
   bool isService(Type serviceType) {
-    var identifier = _ServiceIdentifier.fromType(serviceType);
     // Note that if a new built-in service is added, this method will need to be updated.
     return serviceType == IServiceProvider ||
         serviceType == IServiceProviderIsService ||
         serviceType == IServiceScopeFactory ||
-        _descriptors.any((e) => identifier == _ServiceIdentifier.fromDescriptor(e));
+        _descriptors.any((e) => e.serviceType == serviceType);
   }
 }
 
