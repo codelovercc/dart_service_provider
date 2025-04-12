@@ -1,3 +1,8 @@
+## 1.2.2
+
+- Update logging messages
+- Use service type to find descriptors
+
 ## 1.2.1
 
 - Clean up code
