@@ -22,6 +22,10 @@ and the Flutter guide for
 
 A services dependency provider, like dependency inject, easy to learn and easy to use.
 
+Announcement：The [service_container](https://pub.dev/packages/service_container) package is recommended,
+it does not require the service container to be built in advance, and it does not need to enumerate
+the service descriptor collection when getting the service instance, so it has faster performance.
+
 ## Features
 
 Provide services life time control with singleton, scoped, transient.
