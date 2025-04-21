@@ -1,3 +1,7 @@
+## 1.2.3
+
+- Recommend use service_container package instead
+
 ## 1.2.2
 
 - Update logging messages
